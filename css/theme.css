@@ -1,0 +1,78 @@
+/* ============================================
+   SAGA HERBALS - THEME FILE
+   Edit this file to change colors & fonts
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Mukta:wght@300;400;500;600&display=swap');
+
+:root {
+  /* ---- PRIMARY COLORS ---- */
+  --color-primary:       #2D6A4F;   /* Deep forest green */
+  --color-primary-light: #52B788;   /* Bright leaf green */
+  --color-primary-dark:  #1B4332;   /* Dark forest */
+
+  /* ---- ACCENT COLORS ---- */
+  --color-accent:        #D4A017;   /* Warm turmeric gold */
+  --color-accent-light:  #F9E07F;   /* Soft golden yellow */
+  --color-accent-dark:   #A07800;   /* Deep amber */
+
+  /* ---- BACKGROUND COLORS ---- */
+  --color-bg:            #FDFAF4;   /* Warm ivory */
+  --color-bg-alt:        #F0EBE0;   /* Soft linen */
+  --color-bg-dark:       #1B4332;   /* Dark green (footer etc) */
+
+  /* ---- TEXT COLORS ---- */
+  --color-text:          #2C2C2C;   /* Near black */
+  --color-text-light:    #6B6B6B;   /* Muted grey */
+  --color-text-on-dark:  #F5F0E8;   /* Cream for dark bg */
+
+  /* ---- UI COLORS ---- */
+  --color-border:        #D8CEB8;
+  --color-success:       #40916C;
+  --color-error:         #C94040;
+  --color-badge:         #D4A017;
+  --color-badge-text:    #1B4332;
+
+  /* ---- SHADOWS ---- */
+  --shadow-sm:  0 2px 8px rgba(27, 67, 50, 0.08);
+  --shadow-md:  0 4px 20px rgba(27, 67, 50, 0.12);
+  --shadow-lg:  0 8px 40px rgba(27, 67, 50, 0.18);
+  --shadow-card: 0 2px 16px rgba(44, 44, 44, 0.08);
+
+  /* ---- TYPOGRAPHY ---- */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'Mukta', sans-serif;
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+  --text-5xl:  3rem;
+
+  /* ---- SPACING ---- */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  /* ---- BORDER RADIUS ---- */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   20px;
+  --radius-xl:   32px;
+  --radius-full: 9999px;
+
+  /* ---- TRANSITIONS ---- */
+  --transition-fast:   all 0.15s ease;
+  --transition-normal: all 0.3s ease;
+  --transition-slow:   all 0.5s ease;
+}
