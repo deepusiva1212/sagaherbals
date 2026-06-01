@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Saga Herbals — Admin Panel</title>
+  <link rel="stylesheet" href="css/admin.css"/>
+</head>
+<body>
+
+<div id="login-page" class="login-page">
+  <div class="login-box">
+    <div class="login-logo">🌿</div>
+    <h1>Saga Herbals Admin</h1>
+    <p>Sign in to manage your store</p>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="admin" autocomplete="username"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<div id="admin-layout" class="admin-layout" style="display:none;">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">🌿</div>
+      <div class="sidebar-brand-text">
+        <strong>Saga Herbals</strong>
+        <span>Admin Panel</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <span class="nav-item-icon">📊</span> Dashboard
+      </div>
+
+      <div class="nav-section-label">Store</div>
+      <div class="nav-item" data-page="orders" onclick="navigate('orders')">
+        <span class="nav-item-icon">📦</span> Orders
+        <span class="nav-badge" id="pending-badge" style="display:none;">0</span>
+      </div>
+      <div class="nav-item" data-page="products" onclick="navigate('products')">
+        <span class="nav-item-icon">🌿</span> Products
+      </div>
+
+      <div class="nav-section-label">Configuration</div>
+      <div class="nav-item" data-page="shipping" onclick="navigate('shipping')">
+        <span class="nav-item-icon">🚚</span> Shipping & Pricing
+      </div>
+      <div class="nav-item" data-page="payment" onclick="navigate('payment')">
+        <span class="nav-item-icon">💳</span> Payment Settings
+      </div>
+      <div class="nav-item" data-page="settings" onclick="navigate('settings')">
+        <span class="nav-item-icon">⚙️</span> Site Settings
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">
+        <span>🚪</span> Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-badge"><div class="live-dot"></div> Live</div>
+        <div class="admin-avatar">A</div>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="dash-stats">
+          <div class="stat-card"><div class="stat-icon green">📦</div><div><div class="stat-info-label">Total Orders</div><div class="stat-info-value" id="stat-total-orders">—</div><div class="stat-info-sub">All time</div></div></div>
+          <div class="stat-card"><div class="stat-icon gold">⏳</div><div><div class="stat-info-label">Pending Orders</div><div class="stat-info-value" id="stat-pending">—</div><div class="stat-info-sub">Need attention</div></div></div>
+          <div class="stat-card"><div class="stat-icon blue">💰</div><div><div class="stat-info-label">Total Revenue</div><div class="stat-info-value" id="stat-revenue">—</div><div class="stat-info-sub">From all orders</div></div></div>
+          <div class="stat-card"><div class="stat-icon purple">🌿</div><div><div class="stat-info-label">Products Listed</div><div class="stat-info-value" id="stat-products">—</div><div class="stat-info-sub">Active products</div></div></div>
+        </div>
+
+        <div class="section-header"><h2>Recent Orders</h2><button class="btn btn-secondary btn-sm" onclick="navigate('orders')">View All</button></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="dash-orders-tbody"><tr><td colspan="7" style="text-align:center;color:#9CA3AF;padding:2rem;">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="page" id="page-orders">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input class="search-input" id="order-search" placeholder="🔍  Search by name, phone, order ID..." oninput="filterOrders()"/>
+            <select class="filter-select" id="order-filter" onchange="filterOrders()">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="packed">Packed</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="exportOrdersCSV()">⬇ Export CSV</button>
+          </div>
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="orders-tbody"><tr><td colspan="9" style="text-align:center;color:#9CA3AF;padding:2rem;">Loading orders...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="page" id="page-products">
+        <div class="section-header" style="margin-bottom:1rem;">
+          <h2 id="product-count-label">Products</h2>
+          <button class="btn btn-primary" onclick="openAddProduct()">+ Add Product</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input class="search-input" id="product-search" placeholder="🔍  Search products..." oninput="filterProducts()"/>
+            <select class="filter-select" id="product-cat-filter" onchange="filterProducts()">
+              <option value="">All Categories</option>
+              <option value="bath">Bath</option>
+              <option value="hair">Hair</option>
+              <option value="skin">Skin</option>
+              <option value="combo">Combo</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <table>
+            <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Original Price</th><th>Badge</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody id="products-tbody"><tr><td colspan="7" style="text-align:center;color:#9CA3AF;padding:2rem;">Loading products...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="page" id="page-shipping">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>🚚 Shipping Rules</h3>
+            <div class="form-group">
+              <label class="form-label">Free Shipping Threshold (₹)</label>
+              <input class="form-control" type="number" id="s-free-threshold" placeholder="500"/>
+              <div class="form-hint">Orders above this amount get free shipping</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Standard Shipping Charge (₹)</label>
+              <input class="form-control" type="number" id="s-ship-charge" placeholder="60"/>
+              <div class="form-hint">Charged when order is below free shipping threshold</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cash on Delivery Extra Charge (₹)</label>
+              <input class="form-control" type="number" id="s-cod-charge" placeholder="30"/>
+              <div class="form-hint">Extra charge for COD orders</div>
+            </div>
+            <button class="btn btn-primary" onclick="saveShipping()">Save Shipping Settings</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>📋 Shipping Preview</h3>
+            <div style="background:#F9FAFB;border-radius:8px;padding:1rem;font-size:0.875rem;">
+              <div style="margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid #E5E7EB;">
+                <strong>Order ₹300 (below threshold)</strong><br>
+                <span style="color:#6B7280;">Shipping charge: <span id="preview-ship">₹60</span></span>
+              </div>
+              <div style="margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:1px solid #E5E7EB;">
+                <strong>Order ₹600 (above threshold)</strong><br>
+                <span style="color:var(--green);">🎉 Free shipping!</span>
+              </div>
+              <div>
+                <strong>COD order ₹300</strong><br>
+                <span style="color:#6B7280;">Shipping + COD: <span id="preview-cod">₹90</span></span>
+              </div>
+            </div>
+            <div style="margin-top:1rem;padding:1rem;background:rgba(45,106,79,0.07);border-radius:8px;font-size:0.82rem;color:var(--green-dark);">
+              💡 Free shipping threshold incentivizes customers to buy more products to qualify for free delivery.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-payment">
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>📱 UPI Settings</h3>
+            <div class="form-group">
+              <label class="form-label">UPI ID</label>
+              <input class="form-control" type="text" id="p-upi-id" placeholder="yourname@upi"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">WhatsApp Number (for orders)</label>
+              <input class="form-control" type="text" id="p-whatsapp" placeholder="919952427492"/>
+              <div class="form-hint">Country code + number, no spaces (e.g. 919952427492)</div>
+            </div>
+            <button class="btn btn-primary" onclick="savePayment()">Save Payment Settings</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>💳 Razorpay Settings</h3>
+            <div class="form-group">
+              <label class="form-label">Razorpay Key ID</label>
+              <input class="form-control" type="text" id="p-razorpay-key" placeholder="rzp_live_xxxxxxxxxxxx"/>
+              <div class="form-hint">Get from Razorpay Dashboard → Settings → API Keys</div>
+            </div>
+            <div style="padding:1rem;background:#FFF7ED;border-radius:8px;font-size:0.82rem;color:#92400E;margin-top:0.5rem;">
+              ⚠️ Keep your Razorpay Secret Key private. Only enter the Key ID here.
+            </div>
+          </div>
+
+          <div class="settings-card full">
+            <h3>🏦 Bank Transfer Details</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Bank Name</label>
+                <input class="form-control" type="text" id="p-bank-name" placeholder="State Bank of India"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Account Holder Name</label>
+                <input class="form-control" type="text" id="p-bank-holder" placeholder="Saga Saga"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Account Number</label>
+                <input class="form-control" type="text" id="p-bank-account" placeholder="XXXXXXXXXXXX"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">IFSC Code</label>
+                <input class="form-control" type="text" id="p-bank-ifsc" placeholder="SBIN0001234"/>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="savePayment()">Save Bank Details</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-settings">
+        <div class="settings-grid">
+          <div class="settings-card full">
+            <h3>🌐 Site Information</h3>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Site Name</label>
+                <input class="form-control" type="text" id="ss-name" placeholder="Saga Herbals"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tagline</label>
+                <input class="form-control" type="text" id="ss-tagline" placeholder="Pure • Organic • Natural"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Instagram URL</label>
+                <input class="form-control" type="text" id="ss-instagram" placeholder="https://www.instagram.com/saga_herbals_organic_protect"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Facebook URL</label>
+                <input class="form-control" type="text" id="ss-facebook" placeholder="https://www.facebook.com/sagaherbals"/>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveSiteSettings()">Save Site Settings</button>
+          </div>
+
+          <div class="settings-card full">
+            <h3>🔥 Firebase Connection Status</h3>
+            <div id="firebase-status" style="display:flex;align-items:center;gap:1rem;padding:1rem;background:#F9FAFB;border-radius:8px;">
+              <div style="font-size:1.5rem;">⏳</div>
+              <div>
+                <strong style="display:block;">Checking Firebase...</strong>
+                <span style="font-size:.82rem;color:#6B7280;">Please wait</span>
+              </div>
+            </div>
+            <div style="margin-top:1rem;font-size:0.82rem;color:#6B7280;">
+              To update your Firebase keys, edit <code style="background:#F3F4F6;padding:2px 6px;border-radius:4px;">firebase-config.js</code> and replace the placeholder values with your actual Firebase project credentials.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div></div></div><div class="modal-overlay" id="order-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="order-modal-title">Order Details</h3>
+      <button class="modal-close" onclick="closeOrderModal()">✕</button>
+    </div>
+    <div class="modal-body" id="order-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeOrderModal()">Close</button>
+      <button class="btn btn-danger btn-sm" id="cancel-order-btn" onclick="cancelCurrentOrder()">Cancel Order</button>
+      <button class="btn btn-primary" id="update-status-btn" onclick="updateCurrentOrderStatus()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="product-modal-title">Add Product</h3>
+      <button class="modal-close" onclick="closeProductModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-product-id"/>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Product Name (English) *</label>
+          <input class="form-control" id="p-name-en" placeholder="Herbal Bathing Powder"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product Name (Tamil)</label>
+          <input class="form-control" id="p-name-tm" placeholder="மூலிகை குளியல் பொடி"/>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Description (English) *</label>
+          <textarea class="form-control" id="p-desc-en" placeholder="Describe the product..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Description (Tamil)</label>
+          <textarea class="form-control" id="p-desc-tm" placeholder="தமிழ் விளக்கம்..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (₹) *</label>
+          <input class="form-control" type="number" id="p-price" placeholder="199"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Original Price (₹) — crossed out</label>
+          <input class="form-control" type="number" id="p-orig-price" placeholder="299"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emoji Icon</label>
+          <input class="form-control" id="p-emoji" placeholder="🌿" maxlength="4"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-control" id="p-category">
+            <option value="bath">Bath</option>
+            <option value="hair">Hair</option>
+            <option value="skin">Skin</option>
+            <option value="combo">Combo</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Badge Text (optional)</label>
+          <input class="form-control" id="p-badge" placeholder="Best Seller"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags (comma separated)</label>
+          <input class="form-control" id="p-tags" placeholder="Organic, Child Safe, No Chemicals"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<div class="admin-toast" id="admin-toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="js/firebase-service.js"></script>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let allOrders   = [];
+let allProducts = [];
+let currentOrderId = null;
+let unsubOrders, unsubProducts;
+
+// ============================================================
+// LOGIN / LOGOUT
+// ============================================================
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (u === ADMIN_CREDENTIALS.username && p === ADMIN_CREDENTIALS.password) {
+    document.getElementById('login-page').style.display  = 'none';
+    document.getElementById('admin-layout').style.display = 'flex';
+    bootAdmin();
+  } else {
+    document.getElementById('login-error').textContent = '❌ Invalid username or password';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-page').style.display !== 'none') doLogin();
+});
+
+function doLogout() {
+  if (unsubOrders)   unsubOrders();
+  if (unsubProducts) unsubProducts();
+  document.getElementById('login-page').style.display  = 'flex';
+  document.getElementById('admin-layout').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+async function bootAdmin() {
+  const ok = initFirebase();
+  updateFirebaseStatus(ok);
+  if (!ok) { adminToast('Firebase not connected — check firebase-config.js', true); return; }
+
+  // Listen real-time
+  unsubOrders = fbListenOrders(orders => {
+    allOrders = orders;
+    renderDashboard();
+    renderOrdersTable(orders);
+    updatePendingBadge(orders);
+  });
+
+  unsubProducts = fbListenProducts(products => {
+    allProducts = products;
+    renderProductsTable(products);
+    document.getElementById('product-count-label').textContent = `Products (${products.length})`;
+    document.getElementById('stat-products').textContent = products.filter(p=>p.active!==false).length;
+  });
+
+  await loadSettingsForms();
+}
+
+function updateFirebaseStatus(ok) {
+  document.getElementById('firebase-status').innerHTML = ok
+    ? `<div style="font-size:1.5rem;">✅</div><div><strong style="color:var(--green);">Firebase Connected</strong><br><span style="font-size:.82rem;color:#6B7280;">Real-time sync active</span></div>`
+    : `<div style="font-size:1.5rem;">❌</div><div><strong style="color:var(--red);">Not Connected</strong><br><span style="font-size:.82rem;color:#6B7280;">Update your firebase-config.js with real API keys</span></div>`;
+}
+
+function updatePendingBadge(orders) {
+  const count = orders.filter(o => o.status === 'pending').length;
+  const badge = document.getElementById('pending-badge');
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const PAGE_TITLES = { dashboard:'Dashboard', orders:'Orders', products:'Products', shipping:'Shipping & Pricing', payment:'Payment Settings', settings:'Site Settings' };
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  document.getElementById('stat-total-orders').textContent = allOrders.length;
+  document.getElementById('stat-pending').textContent      = allOrders.filter(o=>o.status==='pending').length;
+  const revenue = allOrders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+(o.total||0),0);
+  document.getElementById('stat-revenue').textContent      = `₹${revenue.toLocaleString('en-IN')}`;
+
+  const tbody = document.getElementById('dash-orders-tbody');
+  const recent = allOrders.slice(0,5);
+  if (recent.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">📭</div><p>No orders yet</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = recent.map(o => orderRow(o, false)).join('');
+}
+
+// ============================================================
+// ORDERS
+// ============================================================
+function renderOrdersTable(orders) {
+  const tbody = document.getElementById('orders-tbody');
+  if (orders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-state-icon">📭</div><p>No orders found</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = orders.map(o => orderRow(o, true)).join('');
+}
+
+function orderRow(o, showActions) {
+  const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+  const items = (o.items||[]).length;
+  const actions = showActions ? `
+    <td style="white-space:nowrap;">
+      <button class="btn btn-secondary btn-sm" onclick="openOrderModal('${o.id}')">👁 View</button>
+    </td>` : `<td><span class="status-badge status-${o.status||'pending'}">${statusLabel(o.status)}</span></td>`;
+  return `<tr>
+    <td><code style="font-size:.78rem;background:#F3F4F6;padding:2px 6px;border-radius:4px;">${o.id?.slice(0,8)||'—'}</code></td>
+    <td><strong>${o.customerName||'—'}</strong></td>
+    ${showActions?`<td>${o.customerPhone||'—'}</td>`:''}
+    <td>${items} item${items!==1?'s':''}</td>
+    <td><strong>₹${(o.total||0).toLocaleString('en-IN')}</strong></td>
+    <td><span style="font-size:.78rem;background:#F3F4F6;padding:2px 6px;border-radius:4px;">${o.paymentMethod||'—'}</span></td>
+    ${showActions?`<td><span class="status-badge status-${o.status||'pending'}">${statusLabel(o.status)}</span></td>`:''}
+    <td style="font-size:.82rem;color:#6B7280;">${date}</td>
+    ${actions}
+  </tr>`;
+}
+
+function filterOrders() {
+  const q      = document.getElementById('order-search').value.toLowerCase();
+  const status = document.getElementById('order-filter').value;
+  const filtered = allOrders.filter(o => {
+    const matchQ = !q ||
+      (o.customerName||'').toLowerCase().includes(q) ||
+      (o.customerPhone||'').includes(q) ||
+      (o.id||'').toLowerCase().includes(q);
+    const matchS = !status || o.status === status;
+    return matchQ && matchS;
+  });
+  renderOrdersTable(filtered);
+}
+
+function statusLabel(s) {
+  return { pending:'⏳ Pending', confirmed:'✅ Confirmed', packed:'📦 Packed', shipped:'🚚 Shipped', delivered:'🎉 Delivered', cancelled:'❌ Cancelled' }[s] || s || 'Pending';
+}
+
+const ORDER_STATUSES = ['pending','confirmed','packed','shipped','delivered','cancelled'];
+
+function openOrderModal(id) {
+  const o = allOrders.find(x => x.id === id);
+  if (!o) return;
+  currentOrderId = id;
+  document.getElementById('order-modal-title').textContent = `Order #${id.slice(0,8)}`;
+  const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString('en-IN') : '—';
+  const updDate = o.updatedAt?.toDate ? o.updatedAt.toDate().toLocaleString('en-IN') : '—';
+
+  document.getElementById('order-modal-body').innerHTML = `
+    <div class="order-detail-grid">
+      <div class="detail-box">
+        <h4>Customer Info</h4>
+        <div class="detail-row"><span>Name</span><span>${o.customerName||'—'}</span></div>
+        <div class="detail-row"><span>Phone</span><span>${o.customerPhone||'—'}</span></div>
+        <div class="detail-row"><span>City</span><span>${o.city||'—'}</span></div>
+        <div class="detail-row"><span>Pincode</span><span>${o.pincode||'—'}</span></div>
+        <div class="detail-row"><span>Address</span><span style="text-align:right;max-width:200px;">${o.deliveryAddress||'—'}</span></div>
+        ${o.notes?`<div class="detail-row"><span>Notes</span><span>${o.notes}</span></div>`:''}
+      </div>
+      <div class="detail-box">
+        <h4>Order Info</h4>
+        <div class="detail-row"><span>Order ID</span><span style="font-family:monospace;font-size:.82rem;">${o.id}</span></div>
+        <div class="detail-row"><span>Payment</span><span>${o.paymentMethod||'—'}</span></div>
+        <div class="detail-row"><span>Subtotal</span><span>₹${(o.subtotal||0).toLocaleString('en-IN')}</span></div>
+        <div class="detail-row"><span>Shipping</span><span>₹${(o.shippingCharge||0).toLocaleString('en-IN')}</span></div>
+        <div class="detail-row"><span><strong>Total</strong></span><span><strong style="color:var(--green);">₹${(o.total||0).toLocaleString('en-IN')}</strong></span></div>
+        <div class="detail-row"><span>Placed</span><span>${date}</span></div>
+        <div class="detail-row"><span>Updated</span><span>${updDate}</span></div>
+      </div>
+    </div>
+
+    <h4 style="margin-bottom:.75rem;font-size:.82rem;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;">Order Items</h4>
+    <div class="order-items-list">
+      ${(o.items||[]).map(item=>`
+        <div class="order-item-row">
+          <div class="order-item-emoji">${item.emoji||'🌿'}</div>
+          <div class="order-item-info">
+            <strong>${item.name||'Product'}</strong>
+            <span style="color:#6B7280;font-size:.82rem;"> × ${item.qty}</span>
+          </div>
+          <div class="order-item-price">₹${(item.subtotal||item.price*item.qty||0).toLocaleString('en-IN')}</div>
+        </div>`).join('')}
+    </div>
+
+    <h4 style="margin-bottom:.75rem;font-size:.82rem;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;">Update Order Status</h4>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;">
+      ${ORDER_STATUSES.map(s=>`<button class="btn btn-sm ${o.status===s?'btn-primary':'btn-secondary'}" onclick="setOrderStatus('${s}')" id="status-btn-${s}">${statusLabel(s)}</button>`).join('')}
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status Note (optional)</label>
+      <input class="form-control" id="status-note" placeholder="e.g. Dispatched via DTDC, tracking ID: 123456" value="${o.statusNote||''}"/>
+    </div>
+
+    <div style="margin-top:1rem;">
+      <a class="btn btn-secondary btn-sm" href="https://wa.me/${o.customerPhone?.replace(/\D/g,'')}" target="_blank">💬 WhatsApp Customer</a>
+    </div>`;
+
+  document.getElementById('order-modal').classList.add('open');
+}
+
+function setOrderStatus(status) {
+  document.querySelectorAll('[id^="status-btn-"]').forEach(b => b.classList.replace('btn-primary','btn-secondary'));
+  document.getElementById(`status-btn-${status}`)?.classList.replace('btn-secondary','btn-primary');
+  document.getElementById(`status-btn-${status}`)._selected = status;
+  window._selectedStatus = status;
+}
+
+async function updateCurrentOrderStatus() {
+  const status = window._selectedStatus;
+  if (!status || !currentOrderId) return;
+  const note = document.getElementById('status-note')?.value || '';
+  try {
+    await fbUpdateOrderStatus(currentOrderId, status, note);
+    adminToast(`Order status updated to "${statusLabel(status)}"`);
+    closeOrderModal();
+  } catch(e) { adminToast('Failed to update status', true); }
+}
+
+async function cancelCurrentOrder() {
+  if (!currentOrderId) return;
+  if (!confirm('Cancel this order?')) return;
+  try {
+    await fbUpdateOrderStatus(currentOrderId, 'cancelled', 'Cancelled by admin');
+    adminToast('Order cancelled');
+    closeOrderModal();
+  } catch(e) { adminToast('Failed to cancel order', true); }
+}
+
+function closeOrderModal() {
+  document.getElementById('order-modal').classList.remove('open');
+  currentOrderId = null; window._selectedStatus = null;
+}
+
+function exportOrdersCSV() {
+  const rows = [['Order ID','Customer','Phone','City','Total','Payment','Status','Date']];
+  allOrders.forEach(o => {
+    const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString() : '';
+    rows.push([o.id, o.customerName, o.customerPhone, o.city, o.total, o.paymentMethod, o.status, date]);
+  });
+  const csv  = rows.map(r => r.map(c => `"${c||''}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a    = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `saga-herbals-orders-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ============================================================
+// PRODUCTS
+// ============================================================
+function renderProductsTable(products) {
+  const tbody = document.getElementById('products-tbody');
+  if (products.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">🌿</div><p>No products yet. Click "Add Product" to start.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <div class="product-thumb">${p.emoji||'🌿'}</div>
+          <div>
+            <div style="font-weight:600;font-size:.88rem;">${p.nameEN}</div>
+            <div style="font-size:.75rem;color:#9CA3AF;">${p.nameTM||''}</div>
+          </div>
+        </div>
+      </td>
+      <td><span style="font-size:.78rem;background:#F3F4F6;padding:2px 8px;border-radius:99px;">${p.category||'—'}</span></td>
+      <td><strong style="color:var(--green);">₹${p.price}</strong></td>
+      <td><span style="text-decoration:line-through;color:#9CA3AF;">₹${p.originalPrice||'—'}</span></td>
+      <td>${p.badge?`<span style="font-size:.75rem;background:rgba(212,160,23,.15);color:#92400E;padding:2px 8px;border-radius:99px;">${p.badge}</span>`:'—'}</td>
+      <td>
+        <label class="toggle-switch">
+          <input type="checkbox" ${p.active!==false?'checked':''} onchange="toggleProduct('${p.id}', this.checked)"/>
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-secondary btn-sm" onclick="openEditProduct('${p.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterProducts() {
+  const q   = document.getElementById('product-search').value.toLowerCase();
+  const cat = document.getElementById('product-cat-filter').value;
+  const filtered = allProducts.filter(p =>
+    (!q || p.nameEN.toLowerCase().includes(q) || (p.nameTM||'').includes(q)) &&
+    (!cat || p.category === cat));
+  renderProductsTable(filtered);
+}
+
+function openAddProduct() {
+  document.getElementById('product-modal-title').textContent = 'Add New Product';
+  document.getElementById('edit-product-id').value = '';
+  ['p-name-en','p-name-tm','p-desc-en','p-desc-tm','p-price','p-orig-price','p-emoji','p-badge','p-tags'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('p-category').value = 'bath';
+  document.getElementById('p-emoji').value = '🌿';
+  document.getElementById('product-modal').classList.add('open');
+}
+
+function openEditProduct(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('product-modal-title').textContent = 'Edit Product';
+  document.getElementById('edit-product-id').value = id;
+  document.getElementById('p-name-en').value    = p.nameEN||'';
+  document.getElementById('p-name-tm').value    = p.nameTM||'';
+  document.getElementById('p-desc-en').value    = p.descEN||'';
+  document.getElementById('p-desc-tm').value    = p.descTM||'';
+  document.getElementById('p-price').value      = p.price||'';
+  document.getElementById('p-orig-price').value = p.originalPrice||'';
+  document.getElementById('p-emoji').value      = p.emoji||'🌿';
+  document.getElementById('p-category').value   = p.category||'bath';
+  document.getElementById('p-badge').value      = p.badge||'';
+  document.getElementById('p-tags').value       = (p.tags||[]).join(', ');
+  document.getElementById('product-modal').classList.add('open');
+}
+
+function closeProductModal() { document.getElementById('product-modal').classList.remove('open'); }
+
+async function saveProduct() {
+  const id     = document.getElementById('edit-product-id').value;
+  const nameEN = document.getElementById('p-name-en').value.trim();
+  const price  = parseFloat(document.getElementById('p-price').value);
+  if (!nameEN || !price) { adminToast('Product name and price are required', true); return; }
+
+  const data = {
+    nameEN,
+    nameTM:        document.getElementById('p-name-tm').value.trim(),
+    descEN:        document.getElementById('p-desc-en').value.trim(),
+    descTM:        document.getElementById('p-desc-tm').value.trim(),
+    price,
+    originalPrice: parseFloat(document.getElementById('p-orig-price').value) || null,
+    emoji:         document.getElementById('p-emoji').value.trim() || '🌿',
+    category:      document.getElementById('p-category').value,
+    badge:         document.getElementById('p-badge').value.trim(),
+    tags:          document.getElementById('p-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    active:        true,
+  };
+
+  try {
+    if (id) { await fbUpdateProduct(id, data); adminToast('Product updated!'); }
+    else     { await fbAddProduct(data);        adminToast('Product added!'); }
+    closeProductModal();
+  } catch(e) { adminToast('Failed to save product', true); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product? This cannot be undone.')) return;
+  try { await fbDeleteProduct(id); adminToast('Product deleted'); }
+  catch(e) { adminToast('Failed to delete product', true); }
+}
+
+async function toggleProduct(id, active) {
+  try { await fbToggleProduct(id, active); adminToast(active ? 'Product activated' : 'Product hidden'); }
+  catch(e) { adminToast('Failed to toggle product', true); }
+}
+
+// ============================================================
+// SETTINGS FORMS
+// ============================================================
+async function loadSettingsForms() {
+  try {
+    const s = await fbGetSettings();
+    // Shipping
+    document.getElementById('s-free-threshold').value = s.freeShippingThreshold || 500;
+    document.getElementById('s-ship-charge').value    = s.shippingCharge || 60;
+    document.getElementById('s-cod-charge').value     = s.cod_charge || 30;
+    updateShippingPreview();
+    // Payment
+    document.getElementById('p-upi-id').value         = s.upi_id || '';
+    document.getElementById('p-whatsapp').value       = s.whatsapp || '919952427492';
+    document.getElementById('p-razorpay-key').value   = s.razorpay_key || '';
+    document.getElementById('p-bank-name').value      = s.bank_name || '';
+    document.getElementById('p-bank-holder').value    = s.bank_holder || '';
+    document.getElementById('p-bank-account').value   = s.bank_account || '';
+    document.getElementById('p-bank-ifsc').value      = s.bank_ifsc || '';
+    // Site
+    document.getElementById('ss-name').value      = s.site_name || 'Saga Herbals';
+    document.getElementById('ss-tagline').value   = s.tagline || 'Pure • Organic • Natural';
+    document.getElementById('ss-instagram').value = s.instagram || '';
+    document.getElementById('ss-facebook').value  = s.facebook || '';
+  } catch(e) { console.warn('Settings load failed:', e); }
+}
+
+function updateShippingPreview() {
+  const ship = parseFloat(document.getElementById('s-ship-charge')?.value) || 60;
+  const cod  = parseFloat(document.getElementById('s-cod-charge')?.value) || 30;
+  const shipEl = document.getElementById('preview-ship');
+  const codEl  = document.getElementById('preview-cod');
+  if (shipEl) shipEl.textContent = `₹${ship}`;
+  if (codEl)  codEl.textContent  = `₹${ship + cod}`;
+}
+document.addEventListener('input', e => {
+  if (['s-ship-charge','s-cod-charge'].includes(e.target.id)) updateShippingPreview();
+});
+
+async function saveShipping() {
+  try {
+    await fbSaveSettings({
+      freeShippingThreshold: parseFloat(document.getElementById('s-free-threshold').value) || 500,
+      shippingCharge:        parseFloat(document.getElementById('s-ship-charge').value) || 60,
+      cod_charge:            parseFloat(document.getElementById('s-cod-charge').value) || 30,
+    });
+    adminToast('Shipping settings saved!');
+  } catch(e) { adminToast('Failed to save shipping settings', true); }
+}
+
+async function savePayment() {
+  try {
+    await fbSaveSettings({
+      upi_id:       document.getElementById('p-upi-id').value.trim(),
+      whatsapp:     document.getElementById('p-whatsapp').value.trim(),
+      razorpay_key: document.getElementById('p-razorpay-key').value.trim(),
+      bank_name:    document.getElementById('p-bank-name').value.trim(),
+      bank_holder:  document.getElementById('p-bank-holder').value.trim(),
+      bank_account: document.getElementById('p-bank-account').value.trim(),
+      bank_ifsc:    document.getElementById('p-bank-ifsc').value.trim(),
+    });
+    adminToast('Payment settings saved!');
+  } catch(e) { adminToast('Failed to save payment settings', true); }
+}
+
+async function saveSiteSettings() {
+  try {
+    await fbSaveSettings({
+      site_name: document.getElementById('ss-name').value.trim(),
+      tagline:   document.getElementById('ss-tagline').value.trim(),
+      instagram: document.getElementById('ss-instagram').value.trim(),
+      facebook:  document.getElementById('ss-facebook').value.trim(),
+    });
+    adminToast('Site settings saved!');
+  } catch(e) { adminToast('Failed to save site settings', true); }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function adminToast(msg, isError = false) {
+  const toast = document.getElementById('admin-toast');
+  toast.textContent = msg;
+  toast.classList.toggle('error', isError);
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Close modals on overlay click
+document.getElementById('order-modal').addEventListener('click', e => { if(e.target===document.getElementById('order-modal')) closeOrderModal(); });
+document.getElementById('product-modal').addEventListener('click', e => { if(e.target===document.getElementById('product-modal')) closeProductModal(); });
+</script>
+</body>
+</html>
