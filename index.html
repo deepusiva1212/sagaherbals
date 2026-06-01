@@ -10,7 +10,6 @@
 </head>
 <body>
 
-<!-- ============ HEADER ============ -->
 <header id="header">
   <nav class="nav-inner">
     <a href="#" class="logo">
@@ -29,19 +28,16 @@
     </ul>
 
     <div style="display:flex;align-items:center;gap:1rem;">
-      <!-- Language Toggle -->
       <div class="nav-lang-toggle">
         <button class="lang-btn active" data-lang="EN">EN</button>
         <button class="lang-btn" data-lang="TM">தமிழ்</button>
       </div>
 
-      <!-- Cart -->
       <button class="cart-btn" id="cart-btn" title="Cart">
         🛒
         <span class="cart-count" id="cart-count">0</span>
       </button>
 
-      <!-- Hamburger -->
       <button class="hamburger" id="hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -49,7 +45,6 @@
   </nav>
 </header>
 
-<!-- ============ HERO ============ -->
 <section id="hero">
   <div class="hero-pattern"></div>
   <div class="hero-inner container">
@@ -90,7 +85,6 @@
   </div>
 </section>
 
-<!-- ============ TRUST STRIP ============ -->
 <section id="trust">
   <div class="trust-strip">
     <div class="trust-item"><span>🚚</span> <span id="trust-free">Free Shipping ₹500+</span></div>
@@ -101,7 +95,6 @@
   </div>
 </section>
 
-<!-- ============ PRODUCTS ============ -->
 <section id="products" class="section-pad">
   <div class="container text-center">
     <h2 class="section-title" id="products-title">Our Products</h2>
@@ -111,7 +104,6 @@
   </div>
 </section>
 
-<!-- ============ FEATURES ============ -->
 <section id="features" class="section-pad">
   <div class="container text-center">
     <h2 class="section-title" id="features-title">Why Choose Saga Herbals?</h2>
@@ -121,7 +113,6 @@
   </div>
 </section>
 
-<!-- ============ REVIEWS ============ -->
 <section id="reviews" class="section-pad">
   <div class="container text-center">
     <h2 class="section-title" id="reviews-title">What Our Customers Say</h2>
@@ -131,7 +122,6 @@
   </div>
 </section>
 
-<!-- ============ ABOUT ============ -->
 <section id="about" class="section-pad">
   <div class="container">
     <div class="about-inner">
@@ -151,7 +141,6 @@
   </div>
 </section>
 
-<!-- ============ CONTACT ============ -->
 <section id="contact" class="section-pad">
   <div class="container">
     <div class="text-center" style="margin-bottom:3rem;">
@@ -194,7 +183,7 @@
         <h3 id="wa-title">Order on WhatsApp</h3>
         <p id="wa-sub">Chat with us directly to place your order, ask about products, or get personalized recommendations.</p>
         <div class="whatsapp-number">+91 99524 27492</div>
-        <a href="https://wa.me/919952427492?text=Hello%20Saga%20Herbals!%20I%20want%20to%20know%20more%20about%20your%20products." target="_blank" class="btn btn-whatsapp" style="width:100%;justify-content:center;font-size:1.05rem;">
+        <a href="https://wa.me/919952427492" target="_blank" class="btn btn-whatsapp wa-link" style="width:100%;justify-content:center;font-size:1.05rem;">
           <span>💬</span> Chat on WhatsApp
         </a>
       </div>
@@ -202,7 +191,6 @@
   </div>
 </section>
 
-<!-- ============ FOOTER ============ -->
 <footer id="footer">
   <div class="container">
     <div class="footer-grid">
@@ -249,7 +237,6 @@
   </div>
 </footer>
 
-<!-- ============ CART SIDEBAR ============ -->
 <div class="cart-overlay" id="cart-overlay"></div>
 <div class="cart-sidebar" id="cart-sidebar">
   <div class="cart-header">
@@ -264,8 +251,9 @@
     </div>
   </div>
   <div class="cart-footer" id="cart-footer" style="display:none;">
+    <div id="cart-shipping-line"></div>
     <div class="cart-subtotal">
-      <span id="cart-subtotal-label">Subtotal</span>
+      <span id="cart-subtotal-label">Total</span>
       <span id="cart-subtotal-num">₹0</span>
     </div>
     <div class="cart-actions">
@@ -277,7 +265,6 @@
   </div>
 </div>
 
-<!-- ============ CHECKOUT MODAL ============ -->
 <div class="modal-overlay" id="checkout-modal">
   <div class="modal">
     <div class="modal-header">
@@ -285,7 +272,6 @@
       <button class="modal-close" id="checkout-close">✕</button>
     </div>
     <div class="modal-body">
-      <!-- Order Summary -->
       <div class="order-summary">
         <h3 id="order-summary-title">Order Summary</h3>
         <div id="summary-lines"></div>
@@ -295,7 +281,6 @@
         </div>
       </div>
 
-      <!-- Delivery Details -->
       <div class="form-group">
         <label class="form-label" id="lbl-name" for="inp-name">Full Name *</label>
         <input class="form-input" id="inp-name" type="text" placeholder="Your full name" required />
@@ -323,7 +308,6 @@
         <input class="form-input" id="inp-notes" type="text" placeholder="Any special instructions..." />
       </div>
 
-      <!-- Payment -->
       <div class="form-group">
         <label class="form-label" id="lbl-payment">Payment Method</label>
         <div class="payment-options">
@@ -357,10 +341,13 @@
   </div>
 </div>
 
-<!-- ============ TOAST ============ -->
 <div class="toast" id="toast"></div>
 
-<!-- ============ SCRIPTS ============ -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="js/firebase-service.js"></script>
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
 
