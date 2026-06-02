@@ -10,6 +10,13 @@
 </head>
 <body>
 
+<!-- ============ ANNOUNCEMENT BAR ============ -->
+<div id="announcement-bar" style="display:none;background:var(--color-accent);color:var(--color-primary-dark);text-align:center;padding:.5rem 1rem;font-size:.85rem;font-weight:600;align-items:center;justify-content:center;gap:.75rem;">
+  <span id="announcement-text"></span>
+  <button onclick="document.getElementById('announcement-bar').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--color-primary-dark);">✕</button>
+</div>
+
+<!-- ============ HEADER ============ -->
 <header id="header">
   <nav class="nav-inner">
     <a href="#" class="logo">
@@ -28,16 +35,19 @@
     </ul>
 
     <div style="display:flex;align-items:center;gap:1rem;">
+      <!-- Language Toggle -->
       <div class="nav-lang-toggle">
         <button class="lang-btn active" data-lang="EN">EN</button>
         <button class="lang-btn" data-lang="TM">தமிழ்</button>
       </div>
 
+      <!-- Cart -->
       <button class="cart-btn" id="cart-btn" title="Cart">
         🛒
         <span class="cart-count" id="cart-count">0</span>
       </button>
 
+      <!-- Hamburger -->
       <button class="hamburger" id="hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -45,6 +55,7 @@
   </nav>
 </header>
 
+<!-- ============ HERO ============ -->
 <section id="hero">
   <div class="hero-pattern"></div>
   <div class="hero-inner container">
@@ -85,6 +96,7 @@
   </div>
 </section>
 
+<!-- ============ TRUST STRIP ============ -->
 <section id="trust">
   <div class="trust-strip">
     <div class="trust-item"><span>🚚</span> <span id="trust-free">Free Shipping ₹500+</span></div>
@@ -95,6 +107,7 @@
   </div>
 </section>
 
+<!-- ============ PRODUCTS ============ -->
 <section id="products" class="section-pad">
   <div class="container text-center">
     <h2 class="section-title" id="products-title">Our Products</h2>
@@ -104,6 +117,7 @@
   </div>
 </section>
 
+<!-- ============ FEATURES ============ -->
 <section id="features" class="section-pad">
   <div class="container text-center">
     <h2 class="section-title" id="features-title">Why Choose Saga Herbals?</h2>
@@ -113,15 +127,30 @@
   </div>
 </section>
 
+<!-- ============ REVIEWS ============ -->
 <section id="reviews" class="section-pad">
   <div class="container text-center">
     <h2 class="section-title" id="reviews-title">What Our Customers Say</h2>
     <p class="section-sub" id="reviews-sub">Real reviews from happy customers</p>
     <div class="divider"></div>
     <div class="reviews-grid" id="reviews-grid"></div>
+    <div style="margin-top:2.5rem;">
+      <button class="btn btn-outline" onclick="openReviewForm()" style="margin:0 auto;">⭐ Write a Review</button>
+    </div>
   </div>
 </section>
 
+<!-- ============ RELATED PRODUCTS ============ -->
+<section id="related-section" class="section-pad" style="background:var(--color-bg-alt);display:none;">
+  <div class="container text-center">
+    <h2 class="section-title">You Might Also Like</h2>
+    <p class="section-sub">More herbal goodness for you</p>
+    <div class="divider"></div>
+    <div class="products-grid" id="related-grid"></div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
 <section id="about" class="section-pad">
   <div class="container">
     <div class="about-inner">
@@ -141,6 +170,7 @@
   </div>
 </section>
 
+<!-- ============ CONTACT ============ -->
 <section id="contact" class="section-pad">
   <div class="container">
     <div class="text-center" style="margin-bottom:3rem;">
@@ -191,6 +221,7 @@
   </div>
 </section>
 
+<!-- ============ FOOTER ============ -->
 <footer id="footer">
   <div class="container">
     <div class="footer-grid">
@@ -237,6 +268,7 @@
   </div>
 </footer>
 
+<!-- ============ CART SIDEBAR ============ -->
 <div class="cart-overlay" id="cart-overlay"></div>
 <div class="cart-sidebar" id="cart-sidebar">
   <div class="cart-header">
@@ -251,6 +283,11 @@
     </div>
   </div>
   <div class="cart-footer" id="cart-footer" style="display:none;">
+    <!-- Coupon Input -->
+    <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
+      <input id="coupon-input" type="text" placeholder="🎟 Coupon code" style="flex:1;padding:.5rem .75rem;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:.85rem;outline:none;" onkeydown="if(event.key==='Enter')applyCoupon()"/>
+      <button id="apply-coupon-btn" onclick="applyCoupon()" class="btn btn-accent" style="padding:.5rem .9rem;font-size:.82rem;">Apply</button>
+    </div>
     <div id="cart-shipping-line"></div>
     <div class="cart-subtotal">
       <span id="cart-subtotal-label">Total</span>
@@ -265,6 +302,7 @@
   </div>
 </div>
 
+<!-- ============ CHECKOUT MODAL ============ -->
 <div class="modal-overlay" id="checkout-modal">
   <div class="modal">
     <div class="modal-header">
@@ -272,6 +310,7 @@
       <button class="modal-close" id="checkout-close">✕</button>
     </div>
     <div class="modal-body">
+      <!-- Order Summary -->
       <div class="order-summary">
         <h3 id="order-summary-title">Order Summary</h3>
         <div id="summary-lines"></div>
@@ -281,6 +320,7 @@
         </div>
       </div>
 
+      <!-- Delivery Details -->
       <div class="form-group">
         <label class="form-label" id="lbl-name" for="inp-name">Full Name *</label>
         <input class="form-input" id="inp-name" type="text" placeholder="Your full name" required />
@@ -308,6 +348,7 @@
         <input class="form-input" id="inp-notes" type="text" placeholder="Any special instructions..." />
       </div>
 
+      <!-- Payment -->
       <div class="form-group">
         <label class="form-label" id="lbl-payment">Payment Method</label>
         <div class="payment-options">
@@ -341,10 +382,54 @@
   </div>
 </div>
 
+<!-- ============ TOAST ============ -->
 <div class="toast" id="toast"></div>
 
+<!-- ============ REVIEW MODAL ============ -->
+<div class="modal-overlay" id="review-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>⭐ Write a Review</h2>
+      <button class="modal-close" onclick="closeReviewForm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="review-form-fields" onsubmit="return false;">
+        <div class="form-group">
+          <label class="form-label">Your Name *</label>
+          <input class="form-input" id="review-name" type="text" placeholder="Your name" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input class="form-input" id="review-location" type="text" placeholder="Chennai, Tamil Nadu"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rating *</label>
+          <div style="display:flex;gap:.5rem;font-size:1.5rem;margin-top:.25rem;">
+            <label style="cursor:pointer;"><input type="radio" name="review-stars" value="5" checked style="display:none;"/> ⭐⭐⭐⭐⭐</label>
+            <label style="cursor:pointer;"><input type="radio" name="review-stars" value="4" style="display:none;"/> ⭐⭐⭐⭐</label>
+            <label style="cursor:pointer;"><input type="radio" name="review-stars" value="3" style="display:none;"/> ⭐⭐⭐</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Review (English) *</label>
+          <textarea class="form-input form-textarea" id="review-text-en" placeholder="Share your experience with our products..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">உங்கள் மதிப்புரை (Tamil - optional)</label>
+          <textarea class="form-input form-textarea" id="review-text-tm" placeholder="உங்கள் அனுபவத்தை பகிரவும்..."></textarea>
+        </div>
+        <button class="btn btn-primary" id="submit-review-btn" onclick="submitReview()" style="width:100%;justify-content:center;padding:.875rem;">Submit Review</button>
+        <p style="font-size:.78rem;color:var(--color-text-light);text-align:center;margin-top:.75rem;">Reviews are approved before being shown on the website.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCRIPTS ============ -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
 <script src="firebase-config.js"></script>
 <script src="js/firebase-service.js"></script>

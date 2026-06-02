@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Track Your Order — Saga Herbals</title>
+  <link rel="stylesheet" href="css/theme.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:var(--font-body);background:var(--color-bg);color:var(--color-text);min-height:100vh;display:flex;flex-direction:column;}
+    .topbar{background:var(--color-primary-dark);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+    .topbar a{color:white;text-decoration:none;font-size:.9rem;opacity:.8;}
+    .topbar a:hover{opacity:1;}
+    .logo{display:flex;align-items:center;gap:.75rem;color:white;font-family:var(--font-display);font-size:1.2rem;font-weight:700;}
+    .main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem 1rem;}
+    .card{background:white;border-radius:20px;padding:2.5rem;width:100%;max-width:520px;box-shadow:0 8px 40px rgba(0,0,0,0.1);}
+    .card-icon{font-size:3rem;text-align:center;margin-bottom:1rem;}
+    h1{font-family:var(--font-display);font-size:1.8rem;color:var(--color-primary-dark);text-align:center;margin-bottom:.5rem;}
+    .subtitle{text-align:center;color:var(--color-text-light);font-size:.9rem;margin-bottom:2rem;}
+    .input-row{display:flex;gap:.75rem;margin-bottom:1rem;}
+    input{flex:1;padding:.75rem 1rem;border:1.5px solid var(--color-border);border-radius:10px;font-size:.95rem;outline:none;font-family:var(--font-body);}
+    input:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px rgba(45,106,79,.1);}
+    .btn{padding:.75rem 1.5rem;background:var(--color-primary);color:white;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .2s;}
+    .btn:hover{background:var(--color-primary-dark);}
+    .result{margin-top:1.5rem;display:none;}
+    .status-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:var(--color-bg-alt);border-radius:12px;margin-bottom:1.25rem;}
+    .status-title{font-size:.78rem;color:var(--color-text-light);text-transform:uppercase;letter-spacing:.05em;}
+    .status-val{font-size:1.1rem;font-weight:700;color:var(--color-primary-dark);margin-top:.2rem;}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;}
+    .info-box{background:var(--color-bg-alt);border-radius:10px;padding:.875rem;}
+    .info-label{font-size:.72rem;color:var(--color-text-light);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;}
+    .info-val{font-size:.9rem;font-weight:600;color:var(--color-primary-dark);}
+    .timeline{display:flex;flex-direction:column;gap:0;}
+    .t-step{display:flex;align-items:flex-start;gap:.875rem;padding:.6rem 0;}
+    .t-left{display:flex;flex-direction:column;align-items:center;gap:0;}
+    .t-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--color-border);flex-shrink:0;margin-top:2px;}
+    .t-line{width:2px;flex:1;background:var(--color-border);min-height:20px;}
+    .t-step.done .t-dot{background:var(--color-primary);border-color:var(--color-primary);}
+    .t-step.done .t-line{background:var(--color-primary);}
+    .t-step.active .t-dot{background:var(--color-accent);border-color:var(--color-accent);box-shadow:0 0 0 4px rgba(212,160,23,.2);}
+    .t-label{font-size:.88rem;font-weight:600;color:var(--color-text-light);}
+    .t-step.done .t-label,.t-step.active .t-label{color:var(--color-primary-dark);}
+    .t-note{font-size:.78rem;color:var(--color-text-light);margin-top:.15rem;}
+    .error-msg{text-align:center;color:#EF4444;padding:1.5rem;font-size:.9rem;}
+    .wa-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.75rem;background:#25D366;color:white;border:none;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:1rem;text-decoration:none;}
+    .wa-btn:hover{background:#1DA851;}
+    @media(max-width:480px){.info-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="logo">🌿 Saga Herbals</a>
+  <a href="index.html">← Back to Shop</a>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="card-icon">📦</div>
+    <h1>Track Your Order</h1>
+    <p class="subtitle">Enter your Order ID to see the current status</p>
+
+    <div class="input-row">
+      <input id="order-id-input" type="text" placeholder="Enter Order ID (e.g. abc12345)" onkeydown="if(event.key==='Enter')trackOrder()"/>
+      <button class="btn" onclick="trackOrder()">Track</button>
+    </div>
+
+    <div class="result" id="result"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.firestore();
+
+const STEPS = [
+  { key:'pending',   icon:'⏳', label:'Order Placed',   note:'Your order has been received' },
+  { key:'confirmed', icon:'✅', label:'Confirmed',       note:'Order confirmed by seller' },
+  { key:'packed',    icon:'📦', label:'Packed',          note:'Your order is being packed' },
+  { key:'shipped',   icon:'🚚', label:'Shipped',         note:'Out for delivery' },
+  { key:'delivered', icon:'🎉', label:'Delivered',       note:'Successfully delivered!' },
+];
+
+const STATUS_ORDER = ['pending','confirmed','packed','shipped','delivered'];
+
+async function trackOrder() {
+  const raw = document.getElementById('order-id-input').value.trim();
+  const result = document.getElementById('result');
+  if (!raw) return;
+  result.style.display='block';
+  result.innerHTML = '<p style="text-align:center;color:var(--color-text-light);padding:1rem;">Searching...</p>';
+
+  try {
+    const doc = await db.collection('orders').doc(raw).get();
+    if (!doc.exists) {
+      result.innerHTML = '<div class="error-msg">❌ Order not found. Please check the Order ID and try again.</div>';
+      return;
+    }
+    const o = { id: doc.id, ...doc.data() };
+    if (o.status === 'cancelled') {
+      result.innerHTML = `<div class="error-msg">❌ This order was cancelled.<br><br><a href="index.html" style="color:var(--color-primary);">Shop Again</a></div>`;
+      return;
+    }
+    const currentIdx = STATUS_ORDER.indexOf(o.status);
+    const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    const items = (o.items||[]).map(i=>`${i.emoji||'🌿'} ${i.name} × ${i.qty}`).join(', ');
+
+    result.innerHTML = `
+      <div class="status-header">
+        <div><div class="status-title">Order ID</div><div class="status-val" style="font-family:monospace;font-size:.9rem;">${o.id}</div></div>
+        <div style="text-align:right;"><div class="status-title">Status</div><div class="status-val">${STEPS.find(s=>s.key===o.status)?.icon||'⏳'} ${o.status?.charAt(0).toUpperCase()+o.status?.slice(1)||'Pending'}</div></div>
+      </div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-label">Customer</div><div class="info-val">${o.customerName||'—'}</div></div>
+        <div class="info-box"><div class="info-label">Order Date</div><div class="info-val">${date}</div></div>
+        <div class="info-box"><div class="info-label">Total Amount</div><div class="info-val">₹${(o.total||0).toLocaleString('en-IN')}</div></div>
+        <div class="info-box"><div class="info-label">Payment</div><div class="info-val">${o.paymentMethod||'—'}</div></div>
+        <div class="info-box" style="grid-column:1/-1;"><div class="info-label">Items</div><div class="info-val" style="font-size:.82rem;">${items}</div></div>
+        ${o.statusNote?`<div class="info-box" style="grid-column:1/-1;"><div class="info-label">Latest Update</div><div class="info-val" style="color:var(--color-primary);">${o.statusNote}</div></div>`:''}
+      </div>
+
+      <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-light);margin-bottom:.75rem;">Order Progress</div>
+      <div class="timeline">
+        ${STEPS.map((step, i) => {
+          const isDone   = i < currentIdx;
+          const isActive = i === currentIdx;
+          const isLast   = i === STEPS.length - 1;
+          return `<div class="t-step ${isDone?'done':''} ${isActive?'active':''}">
+            <div class="t-left">
+              <div class="t-dot"></div>
+              ${!isLast?'<div class="t-line"></div>':''}
+            </div>
+            <div>
+              <div class="t-label">${step.icon} ${step.label}</div>
+              <div class="t-note">${isDone||isActive?step.note:'Waiting...'}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <a class="wa-btn" href="https://wa.me/${FIREBASE_CONFIG ? '' : '919952427492'}?text=${encodeURIComponent(`Hi! I want to check on my order ID: ${o.id}`)}" target="_blank">
+        💬 Contact Us on WhatsApp
+      </a>`;
+  } catch(e) {
+    result.innerHTML = '<div class="error-msg">⚠️ Something went wrong. Please try again.</div>';
+    console.error(e);
+  }
+}
+
+// Auto-load from URL param ?id=...
+const urlId = new URLSearchParams(window.location.search).get('id');
+if (urlId) {
+  document.getElementById('order-id-input').value = urlId;
+  trackOrder();
+}
+</script>
+</body>
+</html>

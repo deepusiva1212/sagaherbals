@@ -1,73 +1,101 @@
-# Saga Herbals Website
+# 🌿 Saga Herbals — Complete Website + Admin Panel
 
 ## 📁 File Structure
 
 ```
 saga-herbals/
-├── index.html          ← Main website page
+├── index.html              ← Customer website (shop)
+├── admin.html              ← Admin panel (Google login)
+├── track.html              ← Order tracking page
+├── firebase-config.js      ← 🔑 Firebase keys + authorized admin emails
 ├── css/
-│   ├── theme.css       ← 🎨 COLORS & FONTS (edit this to change theme)
-│   └── style.css       ← Layout & component styles
+│   ├── theme.css           ← 🎨 Colors & fonts (only file to edit for theme)
+│   ├── style.css           ← Website styles
+│   └── admin.css           ← Admin panel styles
 └── js/
-    ├── data.js         ← 📦 Products, prices & translations
-    └── app.js          ← Website logic (cart, checkout, language)
+    ├── data.js             ← Static fallback data & Tamil/English strings
+    ├── firebase-service.js ← All Firebase DB + Auth operations
+    └── app.js              ← Website logic
 ```
 
 ---
 
-## 🎨 To Change Colors
+## 🔥 STEP 1: Enable Google Sign-In in Firebase
 
-Open `css/theme.css` and edit the values under `:root { }`.
-
-Key variables:
-- `--color-primary` → Main green color
-- `--color-accent` → Gold/highlight color
-- `--color-bg` → Background color
+1. Go to https://console.firebase.google.com → your project
+2. Click **Authentication** → **Sign-in method**
+3. Enable **Google** as a provider
+4. Add your domain to **Authorized domains** (add `localhost` for testing)
 
 ---
 
-## 📦 To Add/Edit Products
+## 🔐 STEP 2: Set Authorized Admin Emails
 
-Open `js/data.js` and find the `products: [ ... ]` array.
+Open `firebase-config.js` and add the Gmail accounts allowed to log into admin:
 
-Each product looks like:
 ```js
-{
-  id: 1,
-  emoji: "🌿",
-  nameEN: "English Name",
-  nameTM: "தமிழ் பெயர்",
-  descEN: "English description",
-  descTM: "தமிழ் விளக்கம்",
-  price: 199,
-  originalPrice: 299,   // crossed-out price
-  badge: "Best Seller",
-  tags: ["Organic", "Child Safe"],
+const AUTHORIZED_ADMIN_EMAILS = [
+  "yourauntygmail@gmail.com",
+  "yourgmail@gmail.com"
+];
+```
+
+---
+
+## 🌐 STEP 3: Set Firestore Rules (Important!)
+
+In Firebase Console → Firestore → Rules, paste:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /products/{doc} { allow read: if true; allow write: if request.auth != null; }
+    match /settings/{doc} { allow read: if true; allow write: if request.auth != null; }
+    match /orders/{doc}   { allow read, write: if true; }
+    match /reviews/{doc}  { allow read: if true; allow write: if true; }
+    match /coupons/{doc}  { allow read: if true; allow write: if request.auth != null; }
+  }
 }
 ```
 
 ---
 
-## 💬 To Change WhatsApp Number
+## 🚀 STEP 4: Deploy (Free on Netlify)
 
-Open `js/data.js` and change:
-```js
-whatsapp: "919952427492",
-```
-(country code + number, no spaces or +)
-
----
-
-## 🌐 To Host the Website
-
-Upload the entire `saga-herbals/` folder to:
-- **Free**: Netlify, Vercel, GitHub Pages
-- **Paid**: Any web hosting (Hostinger, GoDaddy, etc.)
-
-No server needed — it's a pure HTML/CSS/JS website!
+1. Go to https://netlify.com → Sign up free
+2. Drag and drop the `saga-herbals` folder
+3. Your site is live instantly!
+4. Add your live domain to Firebase Authorized Domains
 
 ---
 
-## ✏️ To Fix the Instagram Username Spelling
+## ✨ Features
 
-In `js/data.js` and `index.html`, search for `saga_herbels` and replace with `saga_herbals` once the Instagram account is updated.
+### Customer Website
+- 🌐 English + Tamil language toggle
+- 📣 Announcement bar (controlled from admin)
+- 🛒 Cart with quantity controls
+- 🎟 Coupon/discount code input
+- 💬 Checkout → WhatsApp order with order ID
+- 📦 Order tracking page (share link with customers)
+- ⭐ Submit review form
+- 🔗 Related products section
+- 🚚 Free shipping threshold (live from admin settings)
+- 📱 Fully mobile responsive
+
+### Admin Panel
+- 🔐 Google Gmail login (only authorized emails)
+- 📊 Live dashboard (orders, revenue, pending count)
+- 📦 Orders — view details, update status, WhatsApp customer, CSV export
+- 🌿 Products — add/edit/delete, stock tracking, low stock warning
+- ⭐ Reviews — approve/reject customer reviews
+- 🎟 Coupons — create % or flat discounts, set expiry & limits
+- 🚚 Shipping — free threshold, charges, COD fee
+- 💳 Payment — UPI, Razorpay, bank details
+- ⚙️ Settings — announcement bar, site info, social links
+
+---
+
+## ✏️ Fix Instagram Spelling Later
+Search `saga_herbels` → replace with `saga_herbals` in `firebase-config.js` and `js/data.js`
