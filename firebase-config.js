@@ -13,10 +13,10 @@ const FIREBASE_CONFIG = {
 };
 
 /* ============================================
-   ADMIN LOGIN CREDENTIALS
-   Change these to your preferred login details
+   AUTHORIZED ADMIN EMAILS
+   Only these exact emails can access the panel
    ============================================ */
-const ADMIN_CREDENTIALS = {
-  username: "admin",
-  password: "sagaherbals2025"
-};
+const AUTHORIZED_ADMIN_EMAILS = [
+  "contact@deepusiva.com",
+  "sagaherbalsofficial@gmail.com" 
+];
