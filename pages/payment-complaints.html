@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Complaints — Saga Herbals</title>
+  <link rel="stylesheet" href="../css/theme.css"/>
+  <link rel="stylesheet" href="../css/pages.css"/>
+</head>
+<body>
+<main class="legal-page">
+  <div class="legal-container">
+    <div class="legal-header">
+      <a href="../index.html" class="back-link">← Back to Shop</a>
+      <h1>Payment Complaints</h1>
+      <p class="legal-date">We resolve payment issues within 24–48 hours</p>
+    </div>
+
+    <div class="complaint-steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div><strong>Check Payment Status</strong><p>First check your bank/UPI app to confirm if payment was deducted. Allow up to 2 hours for our team to verify.</p></div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div><strong>Share Screenshot</strong><p>Send your payment screenshot and Order ID to our WhatsApp number for quick resolution.</p></div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div><strong>Fill This Form</strong><p>If still unresolved, submit the form below. We will contact you within 24 hours.</p></div>
+      </div>
+    </div>
+
+    <div class="legal-body">
+      <h2>Submit a Payment Complaint</h2>
+      <div id="complaint-success" style="display:none;background:rgba(45,106,79,.1);border-radius:10px;padding:1.25rem;margin-bottom:1rem;color:var(--color-primary-dark);">
+        ✅ <strong>Complaint submitted!</strong> We will contact you within 24 hours. Your reference ID: <span id="complaint-ref"></span>
+      </div>
+      <form id="complaint-form" onsubmit="submitComplaint(event)">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input class="form-input" id="c-name" type="text" placeholder="Your name" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number *</label>
+          <input class="form-input" id="c-phone" type="tel" placeholder="+91 XXXXX XXXXX" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" id="c-email" type="email" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Order ID (if available)</label>
+          <input class="form-input" id="c-order-id" type="text" placeholder="e.g. SH-1001"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Method Used *</label>
+          <select class="form-input" id="c-payment" required>
+            <option value="">Select method</option>
+            <option value="UPI">UPI / GPay / PhonePe</option>
+            <option value="Razorpay">Razorpay (Card/Net Banking)</option>
+            <option value="Bank">Bank Transfer</option>
+            <option value="COD">Cash on Delivery</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount Paid (₹) *</label>
+          <input class="form-input" id="c-amount" type="number" placeholder="0" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Issue Description *</label>
+          <textarea class="form-input" id="c-description" rows="4" placeholder="Describe your payment issue in detail..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transaction ID / UTR Number</label>
+          <input class="form-input" id="c-txn-id" type="text" placeholder="Transaction reference number"/>
+        </div>
+        <button class="btn btn-primary" type="submit" id="complaint-btn" style="width:100%;justify-content:center;padding:1rem;">
+          Submit Complaint
+        </button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../js/firebase-service.js"></script>
+<script src="../js/config.js"></script>
+<script>
+initFirebase();
+const settings = {};
+fbGetSettings().then(s => Object.assign(settings, s)).catch(()=>{});
+
+async function submitComplaint(e) {
+  e.preventDefault();
+  const btn = document.getElementById('complaint-btn');
+  btn.textContent = 'Submitting...'; btn.disabled = true;
+  try {
+    const data = {
+      name:          document.getElementById('c-name').value.trim(),
+      phone:         document.getElementById('c-phone').value.trim(),
+      email:         document.getElementById('c-email').value.trim(),
+      orderId:       document.getElementById('c-order-id').value.trim(),
+      paymentMethod: document.getElementById('c-payment').value,
+      amount:        parseFloat(document.getElementById('c-amount').value) || 0,
+      description:   document.getElementById('c-description').value.trim(),
+      txnId:         document.getElementById('c-txn-id').value.trim(),
+      type:          'payment',
+    };
+    const refId = await fbSubmitComplaint(data);
+    document.getElementById('complaint-ref').textContent = refId.slice(0,8).toUpperCase();
+    document.getElementById('complaint-success').style.display = 'block';
+    document.getElementById('complaint-form').reset();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch(err) {
+    alert('Submission failed. Please WhatsApp us directly.');
+  } finally {
+    btn.textContent = 'Submit Complaint'; btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
