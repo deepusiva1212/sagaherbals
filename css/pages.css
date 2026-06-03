@@ -1,0 +1,83 @@
+/* ============================================================
+   SAGA HERBALS — PAGES CSS
+   Shared styles for privacy, terms, complaints, track pages.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Mukta:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body, 'Mukta', sans-serif); background: var(--color-bg, #FDFAF4); color: var(--color-text, #2C2C2C); }
+
+/* ---- Page chrome ---- */
+.page-topbar {
+  background: var(--color-primary-dark, #1B4332);
+  padding: .875rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.page-topbar .logo { display: flex; align-items: center; gap: .6rem; color: white; font-family: var(--font-display, 'Playfair Display', serif); font-size: 1.1rem; font-weight: 700; text-decoration: none; }
+.page-topbar a { color: rgba(255,255,255,.8); font-size: .85rem; text-decoration: none; }
+.page-topbar a:hover { color: white; }
+
+/* ---- Legal page ---- */
+.legal-page { min-height: 100vh; padding: 2rem 1rem 4rem; }
+.legal-container { max-width: 760px; margin: 0 auto; }
+.legal-header { margin-bottom: 2rem; }
+.back-link { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-primary, #2D6A4F); font-size: .88rem; font-weight: 500; text-decoration: none; margin-bottom: 1rem; }
+.back-link:hover { text-decoration: underline; }
+.legal-header h1 { font-family: var(--font-display, 'Playfair Display', serif); font-size: 2rem; color: var(--color-primary-dark, #1B4332); }
+.legal-date { font-size: .82rem; color: #9CA3AF; margin-top: .35rem; }
+
+.legal-body h2 { font-family: var(--font-display, 'Playfair Display', serif); font-size: 1.15rem; color: var(--color-primary-dark, #1B4332); margin: 1.75rem 0 .6rem; }
+.legal-body p  { font-size: .9rem; line-height: 1.8; color: #374151; margin-bottom: .75rem; }
+.legal-body ul { padding-left: 1.5rem; margin-bottom: .75rem; }
+.legal-body ul li { font-size: .9rem; line-height: 1.8; color: #374151; margin-bottom: .2rem; }
+
+/* ---- Complaint page ---- */
+.complaint-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
+.step-card { background: white; border-radius: 12px; padding: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,.07); display: flex; align-items: flex-start; gap: .875rem; }
+.step-num { width: 32px; height: 32px; background: var(--color-primary, #2D6A4F); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem; flex-shrink: 0; }
+.step-card strong { display: block; font-size: .88rem; color: var(--color-primary-dark, #1B4332); margin-bottom: .2rem; }
+.step-card p { font-size: .82rem; color: #6B7280; line-height: 1.5; }
+
+.form-group { margin-bottom: 1rem; }
+.form-label { display: block; font-size: .8rem; font-weight: 600; color: #374151; margin-bottom: .35rem; }
+.form-input {
+  width: 100%; padding: .7rem .875rem;
+  border: 1.5px solid #E5E7EB; border-radius: 8px;
+  font-size: .9rem; font-family: inherit; outline: none;
+  transition: border .2s; background: white;
+}
+.form-input:focus { border-color: var(--color-primary, #2D6A4F); box-shadow: 0 0 0 3px rgba(45,106,79,.1); }
+textarea.form-input { resize: vertical; min-height: 100px; }
+
+.btn { display: inline-flex; align-items: center; gap: .4rem; padding: .65rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; font-size: .9rem; transition: all .2s; }
+.btn-primary { background: var(--color-primary, #2D6A4F); color: white; }
+.btn-primary:hover { background: var(--color-primary-dark, #1B4332); }
+
+/* ---- Payment info boxes (used on checkout) ---- */
+.payment-info-box { background: #F9FAFB; border-radius: 10px; padding: 1rem; margin-top: .75rem; }
+.payment-info-title { font-weight: 700; font-size: .92rem; color: var(--color-primary-dark, #1B4332); margin-bottom: .75rem; }
+.upi-id-box { background: white; border: 1.5px dashed var(--color-primary, #2D6A4F); border-radius: 8px; padding: .6rem 1rem; font-size: .88rem; margin-bottom: .75rem; display: flex; align-items: center; justify-content: space-between; }
+.copy-btn { background: none; border: none; cursor: pointer; font-size: .82rem; color: var(--color-primary, #2D6A4F); padding: 0; }
+.payment-notice { background: rgba(45,106,79,.08); border-left: 3px solid var(--color-primary, #2D6A4F); border-radius: 0 8px 8px 0; padding: .75rem 1rem; font-size: .82rem; line-height: 1.7; color: #374151; }
+.payment-notice.warning { background: rgba(245,158,11,.08); border-color: #F59E0B; }
+.bank-detail-grid { margin: .5rem 0 .75rem; }
+.bank-row { display: flex; justify-content: space-between; padding: .4rem 0; font-size: .85rem; border-bottom: 1px solid #F3F4F6; }
+.bank-row span:first-child { color: #6B7280; }
+.bank-row strong { color: var(--color-primary-dark, #1B4332); }
+
+/* ---- Product detail modal ---- */
+.product-detail-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.product-video-wrap { margin-top: .75rem; border-radius: 10px; overflow: hidden; }
+.product-video-wrap iframe { width: 100%; aspect-ratio: 16/9; display: block; }
+.media-indicator { position: absolute; top: .75rem; right: .75rem; background: rgba(0,0,0,.6); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .75rem; }
+
+/* ---- Order confirm modal ---- */
+.order-confirm-box { text-align: center; padding: 1.5rem 1rem; }
+.order-confirm-box .confirm-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+.order-confirm-box h2 { font-family: var(--font-display, 'Playfair Display', serif); font-size: 1.5rem; color: var(--color-primary-dark, #1B4332); margin-bottom: .5rem; }
+
+@media (max-width: 640px) {
+  .product-detail-layout { grid-template-columns: 1fr; }
+  .complaint-steps { grid-template-columns: 1fr; }
+}
