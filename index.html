@@ -1,113 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Saga Herbals — Pure Organic Natural Products</title>
-  <meta name="description" content="Saga Herbals — 100% organic herbal bathing powder, hair oil and more. Child safe, pure herbs, fast delivery across India." />
-  <link rel="stylesheet" href="css/theme.css" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="description" content="100% organic herbal bathing powder, hair oil and more. Child safe, pure herbs, fast delivery across India."/>
+  <meta name="keywords" content="herbal bathing powder, organic hair oil, child safe herbal, saga herbals, Tamil Nadu"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="Saga Herbals — Pure Organic Natural Products"/>
+  <meta property="og:description" content="100% organic herbal products. Child safe, pure herbs, fast delivery across India."/>
+  <link rel="stylesheet" href="css/theme.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/pages.css"/>
+  <style>
+    /* ---- Payment styles ---- */
+    .payment-option{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 1rem;border:1.5px solid var(--color-border);border-radius:var(--radius-md);cursor:pointer;transition:var(--transition-fast);margin-bottom:.5rem;}
+    .payment-option.selected,.payment-option:hover{border-color:var(--color-primary);background:rgba(45,106,79,.05);}
+    .payment-option input[type=radio]{margin-top:3px;accent-color:var(--color-primary);flex-shrink:0;}
+    .payment-text{display:flex;flex-direction:column;gap:2px;}
+    .payment-label{font-weight:600;font-size:.9rem;color:var(--color-primary-dark);}
+    .payment-desc{font-size:.78rem;color:var(--color-text-light);}
+    #payment-detail-box{margin-top:.5rem;}
+    /* ---- Cart breakdown ---- */
+    .cart-breakdown{padding:.75rem 0;border-top:1px solid var(--color-border);font-size:.85rem;}
+    .breakdown-row{display:flex;justify-content:space-between;padding:.2rem 0;color:var(--color-text-light);}
+    .breakdown-row.green{color:var(--color-success);}
+    .inline-remove{background:none;border:none;cursor:pointer;color:#EF4444;font-size:.75rem;padding:0 0 0 .3rem;}
+    /* ---- Product detail modal ---- */
+    #product-detail-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:3000;display:none;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto;}
+    #product-detail-modal.open{display:flex;}
+    .product-detail-wrap{background:white;border-radius:20px;width:100%;max-width:900px;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:slideUp .3s ease;}
+    .product-detail-close{position:absolute;top:1rem;right:1rem;background:white;border:none;border-radius:50%;width:36px;height:36px;font-size:1.1rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+    .product-detail-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:center;}
+    #product-detail-body{padding:1.5rem;}
+    /* ---- Order confirm modal ---- */
+    #order-confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4000;display:none;align-items:center;justify-content:center;padding:1rem;}
+    #order-confirm-modal.open{display:flex;}
+    .order-confirm-inner{background:white;border-radius:20px;padding:2.5rem;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:slideUp .3s ease;}
+  </style>
 </head>
 <body>
 
-<!-- ============ ANNOUNCEMENT BAR ============ -->
-<div id="announcement-bar" style="display:none;background:var(--color-accent);color:var(--color-primary-dark);text-align:center;padding:.5rem 1rem;font-size:.85rem;font-weight:600;align-items:center;justify-content:center;gap:.75rem;">
+<!-- ANNOUNCEMENT BAR -->
+<div id="announcement-bar" style="display:none;background:var(--color-accent);color:var(--color-primary-dark);text-align:center;padding:.5rem 1rem;font-size:.85rem;font-weight:600;align-items:center;justify-content:center;gap:.75rem;position:relative;z-index:101;">
   <span id="announcement-text"></span>
-  <button onclick="document.getElementById('announcement-bar').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--color-primary-dark);">✕</button>
+  <button onclick="document.getElementById('announcement-bar').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--color-primary-dark);margin-left:.5rem;">✕</button>
 </div>
 
-<!-- ============ HEADER ============ -->
+<!-- HEADER -->
 <header id="header">
   <nav class="nav-inner">
     <a href="#" class="logo">
       <div class="logo-icon">🌿</div>
       <div class="logo-text">
         <div class="logo-name">Saga Herbals</div>
-        <div class="logo-tagline" id="footer-tagline-nav">Pure • Organic • Natural</div>
+        <div class="logo-tagline">Pure • Organic • Natural</div>
       </div>
     </a>
-
     <ul class="nav-links" id="nav-links-list">
       <li><a href="#hero"     id="nav-home">Home</a></li>
       <li><a href="#products" id="nav-products">Products</a></li>
       <li><a href="#about"    id="nav-about">About</a></li>
       <li><a href="#contact"  id="nav-contact">Contact</a></li>
+      <li><a href="track.html">📦 Track Order</a></li>
     </ul>
-
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <!-- Language Toggle -->
+    <div style="display:flex;align-items:center;gap:.75rem;">
       <div class="nav-lang-toggle">
         <button class="lang-btn active" data-lang="EN">EN</button>
         <button class="lang-btn" data-lang="TM">தமிழ்</button>
       </div>
-
-      <!-- Cart -->
-      <button class="cart-btn" id="cart-btn" title="Cart">
-        🛒
-        <span class="cart-count" id="cart-count">0</span>
-      </button>
-
-      <!-- Hamburger -->
-      <button class="hamburger" id="hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
+      <button class="cart-btn" id="cart-btn">🛒<span class="cart-count" id="cart-count">0</span></button>
+      <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
     </div>
   </nav>
 </header>
 
-<!-- ============ HERO ============ -->
+<!-- HERO -->
 <section id="hero">
   <div class="hero-pattern"></div>
   <div class="hero-inner container">
     <div class="hero-content">
       <div class="hero-badge" id="hero-badge">100% Organic & Natural</div>
-      <h1 class="hero-title" id="hero-title">
-        Pure Nature,<br><span id="hero-title-span">Radiant You</span>
-      </h1>
+      <h1 class="hero-title" id="hero-title">Pure Nature,<br><span id="hero-title-span">Radiant You</span></h1>
       <p class="hero-sub" id="hero-sub">Handcrafted herbal products made with love — safe for your family, kind to the earth.</p>
       <div class="hero-actions">
         <a href="#products" class="btn btn-primary" id="hero-btn1">Shop Now</a>
-        <a href="https://wa.me/919952427492" target="_blank" class="btn btn-whatsapp" id="hero-btn2">
-          <span>💬</span> WhatsApp Us
-        </a>
+        <a href="#" class="btn btn-whatsapp wa-link" id="hero-btn2">💬 WhatsApp Us</a>
       </div>
       <div class="hero-stats">
-        <div class="stat">
-          <div class="stat-num" id="stat1-num">200+</div>
-          <div class="stat-label" id="stat1-lbl">Happy Customers</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num" id="stat2-num">100%</div>
-          <div class="stat-label" id="stat2-lbl">Organic</div>
-        </div>
-        <div class="stat">
-          <div class="stat-num" id="stat3-num">10+</div>
-          <div class="stat-label" id="stat3-lbl">Products</div>
-        </div>
+        <div class="stat"><div class="stat-num" id="stat1-num">200+</div><div class="stat-label" id="stat1-lbl">Happy Customers</div></div>
+        <div class="stat"><div class="stat-num" id="stat2-num">100%</div><div class="stat-label" id="stat2-lbl">Organic</div></div>
+        <div class="stat"><div class="stat-num" id="stat3-num">10+</div><div class="stat-label" id="stat3-lbl">Products</div></div>
       </div>
     </div>
-
     <div class="hero-visual">
       <div class="hero-blob">🌿</div>
-      <div class="hero-float f1">✅ <span id="hero-f1">Child Safe</span></div>
-      <div class="hero-float f2">🌱 <span id="hero-f2">100% Organic</span></div>
-      <div class="hero-float f3">🚚 <span id="hero-f3">Fast Delivery</span></div>
+      <div class="hero-float f1">✅ Child Safe</div>
+      <div class="hero-float f2">🌱 100% Organic</div>
+      <div class="hero-float f3">🚚 Fast Delivery</div>
     </div>
   </div>
 </section>
 
-<!-- ============ TRUST STRIP ============ -->
+<!-- TRUST -->
 <section id="trust">
   <div class="trust-strip">
-    <div class="trust-item"><span>🚚</span> <span id="trust-free">Free Shipping ₹500+</span></div>
-    <div class="trust-item"><span>🌿</span> <span id="trust-organic">100% Organic</span></div>
-    <div class="trust-item"><span>👶</span> <span id="trust-safe">Child Safe</span></div>
-    <div class="trust-item"><span>⚡</span> <span id="trust-delivery">Fast Delivery</span></div>
-    <div class="trust-item"><span>🌺</span> <span id="trust-auth">Authentic Herbs</span></div>
+    <div class="trust-item"><span>🚚</span><span id="trust-free">Free Shipping ₹500+</span></div>
+    <div class="trust-item"><span>🌿</span><span id="trust-organic">100% Organic</span></div>
+    <div class="trust-item"><span>👶</span><span id="trust-safe">Child Safe</span></div>
+    <div class="trust-item"><span>⚡</span><span id="trust-delivery">Fast Delivery</span></div>
+    <div class="trust-item"><span>🌺</span><span id="trust-auth">Authentic Herbs</span></div>
   </div>
 </section>
 
-<!-- ============ PRODUCTS ============ -->
+<!-- PRODUCTS -->
 <section id="products" class="section-pad">
   <div class="container text-center">
     <h2 class="section-title" id="products-title">Our Products</h2>
@@ -117,8 +123,8 @@
   </div>
 </section>
 
-<!-- ============ FEATURES ============ -->
-<section id="features" class="section-pad">
+<!-- FEATURES -->
+<section id="features" class="section-pad" style="background:var(--color-bg-alt);">
   <div class="container text-center">
     <h2 class="section-title" id="features-title">Why Choose Saga Herbals?</h2>
     <p class="section-sub" id="features-sub">We believe nature has everything you need</p>
@@ -127,7 +133,7 @@
   </div>
 </section>
 
-<!-- ============ REVIEWS ============ -->
+<!-- REVIEWS -->
 <section id="reviews" class="section-pad">
   <div class="container text-center">
     <h2 class="section-title" id="reviews-title">What Our Customers Say</h2>
@@ -135,43 +141,33 @@
     <div class="divider"></div>
     <div class="reviews-grid" id="reviews-grid"></div>
     <div style="margin-top:2.5rem;">
-      <button class="btn btn-outline" onclick="openReviewForm()" style="margin:0 auto;">⭐ Write a Review</button>
+      <button class="btn btn-outline" onclick="openReviewForm()">⭐ Write a Review</button>
     </div>
   </div>
 </section>
 
-<!-- ============ RELATED PRODUCTS ============ -->
-<section id="related-section" class="section-pad" style="background:var(--color-bg-alt);display:none;">
-  <div class="container text-center">
-    <h2 class="section-title">You Might Also Like</h2>
-    <p class="section-sub">More herbal goodness for you</p>
-    <div class="divider"></div>
-    <div class="products-grid" id="related-grid"></div>
-  </div>
-</section>
-
-<!-- ============ ABOUT ============ -->
-<section id="about" class="section-pad">
+<!-- ABOUT -->
+<section id="about" class="section-pad" style="background:linear-gradient(135deg,var(--color-primary-dark),var(--color-primary));color:var(--color-text-on-dark);">
   <div class="container">
     <div class="about-inner">
-      <div class="about-emoji">🌿</div>
+      <div class="about-emoji" style="font-size:8rem;text-align:center;">🌿</div>
       <div class="about-content">
-        <h2 class="section-title" id="about-title">Our Story</h2>
-        <p class="section-sub" id="about-sub">Founded with love, grown with nature</p>
+        <h2 class="section-title" id="about-title" style="color:var(--color-text-on-dark);">Our Story</h2>
+        <p class="section-sub" id="about-sub" style="color:rgba(245,240,232,.8);">Founded with love, grown with nature</p>
         <div class="divider" style="margin-left:0;"></div>
-        <p id="about-p1">Saga Herbals was born from a simple belief — that nature provides the best care for our bodies.</p>
-        <p id="about-p2">We source only the finest organic herbs, ensure zero harmful chemicals, and make products safe for your entire family.</p>
-        <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;">
+        <p id="about-p1" style="color:rgba(245,240,232,.85);line-height:1.8;margin-bottom:1rem;"></p>
+        <p id="about-p2" style="color:rgba(245,240,232,.85);line-height:1.8;margin-bottom:2rem;"></p>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
           <a href="#products" class="btn btn-accent">Shop Now</a>
-          <a href="https://wa.me/919952427492" target="_blank" class="btn btn-outline" style="border-color:rgba(245,240,232,0.5);color:var(--color-text-on-dark);">WhatsApp Us</a>
+          <a href="#" class="btn wa-link" style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);">💬 WhatsApp</a>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ CONTACT ============ -->
-<section id="contact" class="section-pad">
+<!-- CONTACT -->
+<section id="contact" class="section-pad" style="background:var(--color-bg-alt);">
   <div class="container">
     <div class="text-center" style="margin-bottom:3rem;">
       <h2 class="section-title" id="contact-title">Get In Touch</h2>
@@ -181,116 +177,92 @@
     <div class="contact-inner">
       <div class="contact-info">
         <h3>Saga Herbals</h3>
-        <div class="contact-item">
-          <div class="contact-item-icon">📱</div>
-          <div class="contact-item-text">
-            <strong>+91 99524 27492</strong>
-            <p>WhatsApp & Calls</p>
-          </div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-item-icon">📍</div>
-          <div class="contact-item-text">
-            <strong>Tamil Nadu, India</strong>
-            <p>Pan India Delivery</p>
-          </div>
-        </div>
-        <div class="contact-item">
-          <div class="contact-item-icon">🕐</div>
-          <div class="contact-item-text">
-            <strong>Mon – Sat, 9 AM – 7 PM</strong>
-            <p>Response within 2 hours</p>
-          </div>
-        </div>
-        <div class="social-links">
-          <a href="https://www.instagram.com/saga_herbels_organic_protect" target="_blank" class="social-link instagram" title="Instagram">📷</a>
-          <a href="https://www.facebook.com/sagaherbals" target="_blank" class="social-link facebook" title="Facebook">f</a>
+        <div class="contact-item"><div class="contact-item-icon">📱</div><div class="contact-item-text"><strong class="wa-number">+91 99524 27492</strong><p>WhatsApp &amp; Calls</p></div></div>
+        <div class="contact-item"><div class="contact-item-icon">📍</div><div class="contact-item-text"><strong>Tamil Nadu, India</strong><p>Pan India Delivery</p></div></div>
+        <div class="contact-item"><div class="contact-item-icon">🕐</div><div class="contact-item-text"><strong>Mon – Sat, 9 AM – 7 PM</strong><p>Response within 2 hours</p></div></div>
+        <div class="contact-item" id="footer-email-row" style="display:none;"><div class="contact-item-icon">✉️</div><div class="contact-item-text"><strong id="footer-email"></strong><p>Email us</p></div></div>
+        <div class="social-links" style="margin-top:1.5rem;display:flex;gap:.75rem;">
+          <a href="https://www.instagram.com/saga_herbels_organic_protect" target="_blank" class="social-link instagram">📷</a>
+          <a href="https://www.facebook.com/sagaherbals" target="_blank" class="social-link facebook" style="background:#1877F2;color:white;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;">f</a>
         </div>
       </div>
-
-      <div class="whatsapp-cta">
+      <div style="background:white;border-radius:var(--radius-xl);padding:2rem;text-align:center;box-shadow:var(--shadow-md);">
         <div style="font-size:3.5rem;margin-bottom:1rem;">💬</div>
-        <h3 id="wa-title">Order on WhatsApp</h3>
-        <p id="wa-sub">Chat with us directly to place your order, ask about products, or get personalized recommendations.</p>
-        <div class="whatsapp-number">+91 99524 27492</div>
-        <a href="https://wa.me/919952427492" target="_blank" class="btn btn-whatsapp wa-link" style="width:100%;justify-content:center;font-size:1.05rem;">
-          <span>💬</span> Chat on WhatsApp
-        </a>
+        <h3 id="wa-title" style="font-family:var(--font-display);font-size:1.5rem;color:var(--color-primary-dark);margin-bottom:.75rem;">Order on WhatsApp</h3>
+        <p id="wa-sub" style="color:var(--color-text-light);margin-bottom:1.5rem;"></p>
+        <div style="font-size:1.5rem;font-weight:700;color:#25D366;margin-bottom:1.5rem;" class="wa-number">+91 99524 27492</div>
+        <a href="#" class="btn btn-whatsapp wa-link" style="width:100%;justify-content:center;">💬 Chat on WhatsApp</a>
+        <div style="margin-top:1rem;display:flex;flex-direction:column;gap:.5rem;">
+          <a href="track.html" style="font-size:.85rem;color:var(--color-primary);">📦 Track my order</a>
+          <a href="pages/payment-complaints.html" style="font-size:.85rem;color:var(--color-text-light);">⚠️ Payment complaint</a>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ FOOTER ============ -->
-<footer id="footer">
+<!-- FOOTER -->
+<footer id="footer" style="background:var(--color-primary-dark);color:var(--color-text-on-dark);padding:3rem 0 1.5rem;">
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <div class="logo">
+        <div class="logo" style="margin-bottom:1rem;">
           <div class="logo-icon">🌿</div>
           <div class="logo-text">
-            <div class="logo-name">Saga Herbals</div>
-            <div class="logo-tagline" id="footer-tagline">Pure • Organic • Natural</div>
+            <div class="logo-name" style="color:var(--color-text-on-dark);">Saga Herbals</div>
+            <div class="logo-tagline" id="footer-tagline" style="color:rgba(245,240,232,.6);">Pure • Organic • Natural</div>
           </div>
         </div>
-        <p id="footer-desc">Handcrafted herbal products for your family. 100% organic, child safe, and made with love.</p>
+        <p id="footer-desc" style="font-size:.85rem;color:rgba(245,240,232,.7);line-height:1.7;"></p>
       </div>
       <div class="footer-col">
-        <h4 id="footer-shop">Shop</h4>
-        <ul>
-          <li><a href="#products">Bathing Powder</a></li>
-          <li><a href="#products">Hair Oil</a></li>
-          <li><a href="#products">Baby Products</a></li>
-          <li><a href="#products">Combo Packs</a></li>
+        <h4 id="footer-shop" style="color:var(--color-accent);font-family:var(--font-display);margin-bottom:1rem;">Shop</h4>
+        <ul style="list-style:none;">
+          <li style="margin-bottom:.5rem;"><a href="#products" style="color:rgba(245,240,232,.7);font-size:.85rem;">Bathing Powder</a></li>
+          <li style="margin-bottom:.5rem;"><a href="#products" style="color:rgba(245,240,232,.7);font-size:.85rem;">Hair Oil</a></li>
+          <li style="margin-bottom:.5rem;"><a href="#products" style="color:rgba(245,240,232,.7);font-size:.85rem;">Baby Products</a></li>
+          <li style="margin-bottom:.5rem;"><a href="#products" style="color:rgba(245,240,232,.7);font-size:.85rem;">Combo Packs</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <h4 id="footer-help">Help</h4>
-        <ul>
-          <li><a href="https://wa.me/919952427492" target="_blank">WhatsApp Us</a></li>
-          <li><a href="#contact">Contact</a></li>
-          <li><a href="#about">About Us</a></li>
-          <li><a href="#reviews">Reviews</a></li>
+        <h4 id="footer-help" style="color:var(--color-accent);font-family:var(--font-display);margin-bottom:1rem;">Help</h4>
+        <ul style="list-style:none;">
+          <li style="margin-bottom:.5rem;"><a href="track.html" style="color:rgba(245,240,232,.7);font-size:.85rem;">Track Order</a></li>
+          <li style="margin-bottom:.5rem;"><a href="pages/payment-complaints.html" style="color:rgba(245,240,232,.7);font-size:.85rem;">Payment Complaint</a></li>
+          <li style="margin-bottom:.5rem;"><a href="pages/privacy.html" style="color:rgba(245,240,232,.7);font-size:.85rem;">Privacy Policy</a></li>
+          <li style="margin-bottom:.5rem;"><a href="pages/terms.html" style="color:rgba(245,240,232,.7);font-size:.85rem;">Terms &amp; Conditions</a></li>
         </ul>
       </div>
       <div class="footer-col">
-        <h4 id="footer-follow">Follow Us</h4>
-        <ul>
-          <li><a href="https://www.instagram.com/saga_herbels_organic_protect" target="_blank">Instagram</a></li>
-          <li><a href="https://www.facebook.com/sagaherbals" target="_blank">Facebook</a></li>
-          <li><a href="https://wa.me/919952427492" target="_blank">WhatsApp</a></li>
+        <h4 id="footer-follow" style="color:var(--color-accent);font-family:var(--font-display);margin-bottom:1rem;">Follow Us</h4>
+        <ul style="list-style:none;">
+          <li style="margin-bottom:.5rem;"><a href="https://www.instagram.com/saga_herbels_organic_protect" target="_blank" style="color:rgba(245,240,232,.7);font-size:.85rem;">Instagram</a></li>
+          <li style="margin-bottom:.5rem;"><a href="https://www.facebook.com/sagaherbals" target="_blank" style="color:rgba(245,240,232,.7);font-size:.85rem;">Facebook</a></li>
+          <li style="margin-bottom:.5rem;"><a href="#" class="wa-link" style="color:rgba(245,240,232,.7);font-size:.85rem;">WhatsApp</a></li>
         </ul>
       </div>
     </div>
-    <div class="footer-bottom">
+    <div style="border-top:1px solid rgba(245,240,232,.15);padding-top:1.5rem;text-align:center;font-size:.75rem;color:rgba(245,240,232,.5);">
       <span id="footer-copy">© 2025 Saga Herbals. All rights reserved. Made with 🌿 love.</span>
     </div>
   </div>
 </footer>
 
-<!-- ============ CART SIDEBAR ============ -->
+<!-- CART SIDEBAR -->
 <div class="cart-overlay" id="cart-overlay"></div>
 <div class="cart-sidebar" id="cart-sidebar">
   <div class="cart-header">
     <h2 id="cart-title">Your Cart</h2>
     <button class="cart-close" id="cart-close">✕</button>
   </div>
-  <div class="cart-items" id="cart-items">
-    <div class="cart-empty">
-      <div class="cart-empty-icon">🛒</div>
-      <strong>Your cart is empty</strong>
-      <p>Add some herbal goodness!</p>
-    </div>
-  </div>
+  <div class="cart-items" id="cart-items"></div>
   <div class="cart-footer" id="cart-footer" style="display:none;">
-    <!-- Coupon Input -->
     <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
       <input id="coupon-input" type="text" placeholder="🎟 Coupon code" style="flex:1;padding:.5rem .75rem;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:.85rem;outline:none;" onkeydown="if(event.key==='Enter')applyCoupon()"/>
       <button id="apply-coupon-btn" onclick="applyCoupon()" class="btn btn-accent" style="padding:.5rem .9rem;font-size:.82rem;">Apply</button>
     </div>
-    <div id="cart-shipping-line"></div>
     <div class="cart-subtotal">
-      <span id="cart-subtotal-label">Total</span>
+      <span>Total</span>
       <span id="cart-subtotal-num">₹0</span>
     </div>
     <div class="cart-actions">
@@ -302,7 +274,7 @@
   </div>
 </div>
 
-<!-- ============ CHECKOUT MODAL ============ -->
+<!-- CHECKOUT MODAL -->
 <div class="modal-overlay" id="checkout-modal">
   <div class="modal">
     <div class="modal-header">
@@ -310,140 +282,105 @@
       <button class="modal-close" id="checkout-close">✕</button>
     </div>
     <div class="modal-body">
-      <!-- Order Summary -->
-      <div class="order-summary">
-        <h3 id="order-summary-title">Order Summary</h3>
+      <div class="order-summary" style="background:var(--color-bg-alt);border-radius:var(--radius-md);padding:1rem;margin-bottom:1.25rem;">
+        <h3 id="order-summary-title" style="font-family:var(--font-display);font-size:.95rem;font-weight:600;color:var(--color-primary-dark);margin-bottom:.75rem;">Order Summary</h3>
         <div id="summary-lines"></div>
-        <div class="order-total">
-          <span>Total</span>
-          <span id="summary-total-num">₹0</span>
+        <div class="order-total" style="display:flex;justify-content:space-between;font-weight:700;border-top:1px solid var(--color-border);padding-top:.75rem;margin-top:.5rem;">
+          <span>Total</span><span id="summary-total-num">₹0</span>
         </div>
-      </div>
-
-      <!-- Delivery Details -->
-      <div class="form-group">
-        <label class="form-label" id="lbl-name" for="inp-name">Full Name *</label>
-        <input class="form-input" id="inp-name" type="text" placeholder="Your full name" required />
-      </div>
-      <div class="form-group">
-        <label class="form-label" id="lbl-phone" for="inp-phone">Phone Number *</label>
-        <input class="form-input" id="inp-phone" type="tel" placeholder="+91 XXXXX XXXXX" required />
-      </div>
-      <div class="form-group">
-        <label class="form-label" id="lbl-address" for="inp-address">Delivery Address *</label>
-        <textarea class="form-textarea" id="inp-address" placeholder="House/Flat No, Street, Area" required></textarea>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" id="lbl-city" for="inp-city">City *</label>
-          <input class="form-input" id="inp-city" type="text" placeholder="City" required />
-        </div>
-        <div class="form-group">
-          <label class="form-label" id="lbl-pincode" for="inp-pincode">Pincode *</label>
-          <input class="form-input" id="inp-pincode" type="text" placeholder="600001" required />
-        </div>
+        <div class="form-group"><label class="form-label" id="lbl-name">Full Name *</label><input class="form-input" id="inp-name" type="text" required/></div>
+        <div class="form-group"><label class="form-label" id="lbl-phone">Phone Number *</label><input class="form-input" id="inp-phone" type="tel" required/></div>
       </div>
-      <div class="form-group">
-        <label class="form-label" id="lbl-notes" for="inp-notes">Order Notes (optional)</label>
-        <input class="form-input" id="inp-notes" type="text" placeholder="Any special instructions..." />
+      <div class="form-group"><label class="form-label" id="lbl-email">Email (for order updates)</label><input class="form-input" id="inp-email" type="email" placeholder="optional"/></div>
+      <div class="form-group"><label class="form-label" id="lbl-address">Delivery Address *</label><textarea class="form-input form-textarea" id="inp-address" required></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label" id="lbl-city">City *</label><input class="form-input" id="inp-city" type="text" required/></div>
+        <div class="form-group"><label class="form-label" id="lbl-pincode">Pincode *</label><input class="form-input" id="inp-pincode" type="text" required/></div>
       </div>
-
-      <!-- Payment -->
+      <div class="form-group"><label class="form-label" id="lbl-notes">Order Notes (optional)</label><input class="form-input" id="inp-notes" type="text"/></div>
       <div class="form-group">
         <label class="form-label" id="lbl-payment">Payment Method</label>
-        <div class="payment-options">
-          <label class="payment-option selected">
-            <input type="radio" name="payment" value="UPI" checked />
-            <span class="payment-icon">📱</span>
-            <span class="payment-label" id="pay-upi">UPI / GPay / PhonePe</span>
-          </label>
-          <label class="payment-option">
-            <input type="radio" name="payment" value="Razorpay" />
-            <span class="payment-icon">💳</span>
-            <span class="payment-label" id="pay-razorpay">Razorpay (Card / Net Banking / UPI)</span>
-          </label>
-          <label class="payment-option">
-            <input type="radio" name="payment" value="COD" />
-            <span class="payment-icon">💵</span>
-            <span class="payment-label" id="pay-cod">Cash on Delivery</span>
-          </label>
-          <label class="payment-option">
-            <input type="radio" name="payment" value="Bank Transfer" />
-            <span class="payment-icon">🏦</span>
-            <span class="payment-label" id="pay-bank">Bank Transfer</span>
-          </label>
-        </div>
+        <div id="checkout-payment-options"></div>
+        <div id="payment-detail-box"></div>
       </div>
-
-      <button class="btn btn-primary" id="place-order-btn" style="width:100%;justify-content:center;margin-top:1rem;padding:1rem;font-size:1.05rem;">
-        Place Order via WhatsApp
-      </button>
+      <button class="btn btn-primary" id="place-order-btn" style="width:100%;justify-content:center;padding:1rem;font-size:1rem;margin-top:.5rem;">Place Order via WhatsApp</button>
     </div>
   </div>
 </div>
 
-<!-- ============ TOAST ============ -->
-<div class="toast" id="toast"></div>
+<!-- PRODUCT DETAIL MODAL -->
+<div id="product-detail-modal">
+  <div class="product-detail-wrap" style="position:relative;">
+    <div class="product-detail-header">
+      <span style="font-family:var(--font-display);font-weight:700;color:var(--color-primary-dark);">🌿 Saga Herbals</span>
+      <button onclick="closeProductDetail()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#9CA3AF;">✕</button>
+    </div>
+    <div id="product-detail-body" style="padding:1.5rem;"></div>
+  </div>
+</div>
 
-<!-- ============ REVIEW MODAL ============ -->
+<!-- REVIEW MODAL -->
 <div class="modal-overlay" id="review-modal">
   <div class="modal">
-    <div class="modal-header">
-      <h2>⭐ Write a Review</h2>
-      <button class="modal-close" onclick="closeReviewForm()">✕</button>
-    </div>
+    <div class="modal-header"><h2>⭐ Write a Review</h2><button class="modal-close" onclick="closeReviewForm()">✕</button></div>
     <div class="modal-body">
       <form id="review-form-fields" onsubmit="return false;">
-        <div class="form-group">
-          <label class="form-label">Your Name *</label>
-          <input class="form-input" id="review-name" type="text" placeholder="Your name" required/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Location</label>
-          <input class="form-input" id="review-location" type="text" placeholder="Chennai, Tamil Nadu"/>
-        </div>
+        <div class="form-group"><label class="form-label">Your Name *</label><input class="form-input" id="review-name" type="text" required/></div>
+        <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="review-location" type="text" placeholder="Chennai, Tamil Nadu"/></div>
         <div class="form-group">
           <label class="form-label">Rating *</label>
-          <div style="display:flex;gap:.5rem;font-size:1.5rem;margin-top:.25rem;">
+          <div style="display:flex;gap:.5rem;font-size:1.4rem;margin-top:.25rem;flex-wrap:wrap;">
             <label style="cursor:pointer;"><input type="radio" name="review-stars" value="5" checked style="display:none;"/> ⭐⭐⭐⭐⭐</label>
             <label style="cursor:pointer;"><input type="radio" name="review-stars" value="4" style="display:none;"/> ⭐⭐⭐⭐</label>
             <label style="cursor:pointer;"><input type="radio" name="review-stars" value="3" style="display:none;"/> ⭐⭐⭐</label>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Your Review (English) *</label>
-          <textarea class="form-input form-textarea" id="review-text-en" placeholder="Share your experience with our products..." required></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">உங்கள் மதிப்புரை (Tamil - optional)</label>
-          <textarea class="form-input form-textarea" id="review-text-tm" placeholder="உங்கள் அனுபவத்தை பகிரவும்..."></textarea>
-        </div>
+        <div class="form-group"><label class="form-label">Your Review (English) *</label><textarea class="form-input form-textarea" id="review-text-en" required></textarea></div>
+        <div class="form-group"><label class="form-label">உங்கள் மதிப்புரை (Tamil - optional)</label><textarea class="form-input form-textarea" id="review-text-tm"></textarea></div>
         <button class="btn btn-primary" id="submit-review-btn" onclick="submitReview()" style="width:100%;justify-content:center;padding:.875rem;">Submit Review</button>
-        <p style="font-size:.78rem;color:var(--color-text-light);text-align:center;margin-top:.75rem;">Reviews are approved before being shown on the website.</p>
+        <p style="font-size:.75rem;color:var(--color-text-light);text-align:center;margin-top:.75rem;">Reviews are approved before being shown on the website.</p>
       </form>
     </div>
   </div>
 </div>
 
-<!-- ============ SCRIPTS ============ -->
-<!-- Firebase SDK -->
+<!-- ORDER CONFIRM MODAL -->
+<div id="order-confirm-modal">
+  <div class="order-confirm-inner">
+    <div style="font-size:3.5rem;margin-bottom:1rem;">🎉</div>
+    <h2 style="font-family:var(--font-display);font-size:1.5rem;color:var(--color-primary-dark);margin-bottom:.5rem;">Order Placed!</h2>
+    <p style="color:var(--color-text-light);font-size:.9rem;margin-bottom:1.5rem;">Your order has been received and sent to WhatsApp. We'll confirm shortly!</p>
+    <div style="background:var(--color-bg-alt);border-radius:10px;padding:1rem;margin-bottom:1.5rem;">
+      <div style="font-size:.78rem;color:var(--color-text-light);margin-bottom:.3rem;">Order ID</div>
+      <div id="confirm-order-id" style="font-family:monospace;font-size:1.1rem;font-weight:700;color:var(--color-primary-dark);"></div>
+      <div style="font-size:.78rem;color:var(--color-text-light);margin:.5rem 0 .3rem;">Total Paid</div>
+      <div id="confirm-order-total" style="font-size:1.3rem;font-weight:700;color:var(--color-primary);"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.75rem;">
+      <a id="confirm-track-btn" href="track.html" class="btn btn-primary" style="justify-content:center;">📦 Track My Order</a>
+      <button onclick="document.getElementById('order-confirm-modal').classList.remove('open')" class="btn btn-secondary" style="justify-content:center;">Continue Shopping</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SCRIPTS -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-
 <script src="firebase-config.js"></script>
+<script src="js/config.js"></script>
 <script src="js/firebase-service.js"></script>
 <script src="js/data.js"></script>
+<script src="js/modules/seo.js"></script>
+<script src="js/modules/payment.js"></script>
+<script src="js/modules/cart.js"></script>
+<script src="js/modules/invoice.js"></script>
+<script src="js/modules/notifications.js"></script>
 <script src="js/app.js"></script>
-
-<script>
-  // Payment option highlight
-  document.querySelectorAll('.payment-option').forEach(opt => {
-    opt.addEventListener('click', () => {
-      document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
-      opt.classList.add('selected');
-    });
-  });
-</script>
 </body>
 </html>
