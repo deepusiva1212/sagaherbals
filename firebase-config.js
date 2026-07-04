@@ -21,7 +21,7 @@ const FIREBASE_CONFIG = {
    viewer             → read-only dashboard
    ============================================================ */
 const ADMIN_ROLES = {
-  "premakalaivanan@gmail.com": "ultra_super_admin",   // ← YOU (owner)
+  "deepusiva2017@gmail.com": "ultra_super_admin",   // ← YOU (owner)
   // "staffgmail@gmail.com":   "admin",
   // "viewergmail@gmail.com":  "viewer",
 };
