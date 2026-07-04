@@ -31,6 +31,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   SEOModule.injectStructuredData(siteSettings, liveProducts);
   renderAll();
   setupEvents();
+  // Init Session 1 modules
+  await initSession1Modules();
 });
 
 /* ---- Helpers ---- */
@@ -111,9 +113,11 @@ function productCard(p) {
   const lowStock = p.stock !== undefined && p.stock > 0 && p.stock <= (siteSettings.low_stock_threshold || 5);
   const outStock = p.stock === 0;
   const hasMedia = p.imageUrl || p.videoUrl || p.reelUrl;
+  const isWished = typeof WishlistModule !== 'undefined' && WishlistModule.has(p.id);
   return `
-  <div class="product-card" onclick="openProductPage('${p.id}')" style="cursor:pointer;">
-    <div class="product-img">
+  <div class="product-card" style="cursor:pointer;position:relative;">
+    <button class="wishlist-btn ${isWished?'active':''}" data-id="${p.id}" onclick="event.stopPropagation();WishlistModule.toggle('${p.id}')" title="Add to wishlist">${isWished?'❤️':'🤍'}</button>
+    <div class="product-img" onclick="openProductPage('${p.id}')">
       ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.nameEN}" style="width:100%;height:100%;object-fit:cover;"/>` : `<div style="font-size:5rem;">${p.emoji||'🌿'}</div>`}
       ${p.badge ? `<div class="product-badge">${p.badge}</div>` : ''}
       ${lowStock ? `<div class="product-badge" style="top:auto;bottom:.75rem;background:#F59E0B;">Only ${p.stock} left!</div>` : ''}
@@ -122,11 +126,14 @@ function productCard(p) {
     </div>
     <div class="product-info">
       <div class="product-tags">${(p.tags||[]).map(tag=>`<span class="tag">${tag}</span>`).join('')}</div>
-      <div class="product-name">${pName(p)}</div>
-      <div class="product-desc">${pDesc(p).substring(0,80)}${pDesc(p).length>80?'...':''}</div>
+      <div class="product-name" onclick="openProductPage('${p.id}')">${pName(p)}</div>
+      <div class="product-desc" onclick="openProductPage('${p.id}')">${pDesc(p).substring(0,80)}${pDesc(p).length>80?'...':''}</div>
       <div class="product-footer">
         <div class="product-price">${p.originalPrice?`<span class="orig">₹${p.originalPrice}</span>`:''} ₹${p.price}</div>
-        <button class="add-cart-btn" onclick="event.stopPropagation();CartModule.add('${p.id}')" ${outStock?'disabled style="opacity:.4;cursor:not-allowed;"':''}>+</button>
+        <div style="display:flex;gap:.35rem;align-items:center;">
+          <button class="share-btn" onclick="event.stopPropagation();shareProduct(${JSON.stringify({id:p.id,nameEN:p.nameEN,nameTM:p.nameTM||'',price:p.price})})" title="Share">↗</button>
+          <button class="add-cart-btn" onclick="event.stopPropagation();CartModule.add('${p.id}')" ${outStock?'disabled style="opacity:.4;cursor:not-allowed;"':''}>+</button>
+        </div>
       </div>
     </div>
   </div>`;
@@ -424,3 +431,131 @@ function setupEvents() {
   document.getElementById('product-detail-modal')?.addEventListener('click', e => { if(e.target===document.getElementById('product-detail-modal')) closeProductDetail(); });
   document.getElementById('order-confirm-modal')?.addEventListener('click', e => { if(e.target===document.getElementById('order-confirm-modal')) e.target.classList.remove('open'); });
 }
+
+/* ============================================================
+   SESSION 1 ADDITIONS — Search, Wishlist, Flash Sale,
+   Loyalty, Share, Recently Viewed, Shipping Progress
+   ============================================================ */
+
+async function initSession1Modules() {
+  FlashSaleModule.init(siteSettings);
+  WishlistModule.init(liveProducts, currentLang);
+  LoyaltyModule.init(siteSettings);
+  SearchModule.init(liveProducts, currentLang, results => {
+    document.getElementById('products-grid').innerHTML = results.map(p => productCard(p)).join('');
+    setupScrollReveal();
+  });
+  SearchModule.renderCategoryTabs([
+    { value:'bath',  label:'Bath',   emoji:'🛁' },
+    { value:'hair',  label:'Hair',   emoji:'💆' },
+    { value:'skin',  label:'Skin',   emoji:'✨' },
+    { value:'combo', label:'Combos', emoji:'🎁' },
+  ]);
+
+  // Search input clear button toggle
+  const searchInput = document.getElementById('product-search-bar');
+  const clearBtn    = document.getElementById('search-clear-btn');
+  if (searchInput && clearBtn) {
+    searchInput.addEventListener('input', () => {
+      clearBtn.style.display = searchInput.value ? 'block' : 'none';
+    });
+  }
+}
+
+/* ---- Share product ---- */
+async function shareProduct(p) {
+  const name = (currentLang === 'TM' && p.nameTM) ? p.nameTM : p.nameEN;
+  const url  = window.location.origin + '/index.html';
+  const text = `Check out ${name} from Saga Herbals! ₹${p.price} only 🌿\n${url}`;
+  if (navigator.share) {
+    try { await navigator.share({ title: name, text, url }); return; } catch(e) {}
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Link copied! 📋');
+  } catch(e) {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  }
+}
+
+/* ---- Shipping progress bar ---- */
+function updateShippingProgress() {
+  const bar       = document.getElementById('shipping-progress-bar');
+  if (!bar) return;
+  const sub       = CartModule.subtotal();
+  const threshold = siteSettings.freeShippingThreshold || 500;
+  const pct       = Math.min(100, Math.round(sub / threshold * 100));
+  const remaining = threshold - sub;
+  const fill      = document.getElementById('shipping-progress-fill');
+  const text      = document.getElementById('shipping-progress-text');
+  if (fill) fill.style.width = `${pct}%`;
+  if (text) {
+    if (remaining <= 0) {
+      text.innerHTML = `<strong style="color:var(--color-success);">🎉 You've unlocked free shipping!</strong>`;
+    } else {
+      text.innerHTML = `Add <strong>₹${remaining}</strong> more for <strong style="color:var(--color-success);">free shipping</strong>`;
+    }
+  }
+  bar.style.display = sub > 0 ? 'block' : 'none';
+}
+
+/* ---- Min cart nudge popup ---- */
+let _nudgeTimer = null;
+function showMinCartNudge(msg) {
+  const el = document.getElementById('min-cart-popup');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  if (_nudgeTimer) clearTimeout(_nudgeTimer);
+  _nudgeTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ---- Recently viewed ---- */
+function renderRecentlyViewed() {
+  const section = document.getElementById('recently-viewed-section');
+  if (!section) return;
+  const ids   = RecentlyViewed.get();
+  const prods = (liveProducts.length ? liveProducts : SHOP_DATA.products)
+    .filter(p => ids.includes(String(p.id))).slice(0, 4);
+  if (prods.length < 2) { section.style.display = 'none'; return; }
+  document.getElementById('recently-viewed-grid').innerHTML = prods.map(p => productCard(p)).join('');
+  section.style.display = 'block';
+  setupScrollReveal();
+}
+
+/* ---- Override CartModule.add to add progress tracking ---- */
+const _cartAddOrig = CartModule.add.bind(CartModule);
+CartModule.add = function(id) {
+  _cartAddOrig(id);
+  updateShippingProgress();
+  const sub       = CartModule.subtotal();
+  const threshold = siteSettings.freeShippingThreshold || 500;
+  const remaining = threshold - sub;
+  if (remaining > 0 && remaining <= 150) {
+    showMinCartNudge(`🚚 Add ₹${remaining} more for FREE shipping!`);
+  }
+};
+
+/* ---- Override openProductPage to track recently viewed ---- */
+const _origOpenProductPage = window.openProductPage;
+window.openProductPage = function(id) {
+  RecentlyViewed.add(id);
+  renderRecentlyViewed();
+  if (_origOpenProductPage) _origOpenProductPage(id);
+  else openProductPageFn(id);
+};
+
+/* ---- Loyalty check at checkout ---- */
+async function checkLoyaltyAtCheckout() {
+  const phone = document.getElementById('inp-phone')?.value?.trim();
+  if (phone && phone.length >= 10 && siteSettings.loyalty_enabled) {
+    await LoyaltyModule.checkAndShowPoints(phone);
+  }
+}
+
+/* Hook loyalty check on phone blur */
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.getElementById('inp-phone')?.addEventListener('blur', checkLoyaltyAtCheckout);
+  }, 1000);
+});

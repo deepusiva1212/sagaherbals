@@ -211,9 +211,14 @@ const DEFAULT_SETTINGS = {
   whatsapp_api_key: '', whatsapp_api_enabled: false,
   emailjs_service_id: '', emailjs_template_id: '', emailjs_public_key: '', emailjs_enabled: false,
   w3forms_key: '', w3forms_enabled: false,
-  footer_whatsapp: '919952427492',
-  footer_email: '',
+  footer_whatsapp: '919952427492', footer_email: '',
   seo_title: '', seo_description: '', seo_keywords: '',
+  // Flash sale
+  flash_sale_active: false, flash_sale_title: '', flash_sale_discount: '',
+  flash_sale_coupon: '', flash_sale_end: null,
+  // Loyalty
+  loyalty_enabled: false, loyalty_points_per_100: 5,
+  loyalty_points_value: 0.5, loyalty_min_redeem: 100,
 };
 
 async function fbGetSettings() {
@@ -307,3 +312,37 @@ async function fbGetNextInvoiceNumber() {
   });
   return invoiceNum;
 }
+
+/* ============================================================
+   LOYALTY POINTS — Firebase operations
+   ============================================================ */
+function fbListenLoyaltyLeaderboard(cb) {
+  return db.collection('loyaltyPoints').orderBy('points','desc').limit(50)
+    .onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+}
+
+async function fbAdjustLoyaltyPoints(phone, delta, reason) {
+  await db.collection('loyaltyPoints').doc(phone).set({
+    points: firebase.firestore.FieldValue.increment(delta),
+    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+  await db.collection('loyaltyPoints').doc(phone)
+    .collection('history').add({
+      type: delta > 0 ? 'admin_add' : 'admin_remove', points: delta, reason,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  await fbLogActivity('ADJUST_LOYALTY_POINTS', { phone, delta, reason });
+}
+
+/* Recently viewed — localStorage helper */
+const RecentlyViewed = {
+  KEY: 'saga_recently_viewed',
+  add(id) {
+    let ids = this.get();
+    ids = [String(id), ...ids.filter(x => x !== String(id))].slice(0, 8);
+    try { localStorage.setItem(this.KEY, JSON.stringify(ids)); } catch(e) {}
+  },
+  get() { try { return JSON.parse(localStorage.getItem(this.KEY) || '[]'); } catch(e) { return []; } },
+};
+
+/* Flash sale + loyalty in DEFAULT_SETTINGS (already added via merge:true in fbSaveSettings) */
