@@ -172,8 +172,13 @@ async function fbToggleProduct(id, active) {
 }
 
 function fbListenProducts(cb) {
-  return db.collection(COL.products).orderBy('sortOrder', 'asc')
-    .onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+  return db.collection(COL.products)
+    .onSnapshot(snap => {
+      const products = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      cb(products);
+    });
 }
 
 async function fbSeedProducts() {
