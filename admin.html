@@ -464,11 +464,14 @@
 <script src="firebase-config.js"></script>
 <script src="js/config.js"></script>
 <script src="js/firebase-service.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="js/modules/invoice.js"></script>
 <script src="js/modules/notifications.js"></script>
+<script src="js/modules/loyalty.js"></script>
 <script src="js/admin/orders.js"></script>
 <script src="js/admin/users.js"></script>
 <script src="js/admin/integrations.js"></script>
+<script src="js/admin/analytics.js"></script>
 <script>
 /* ============================================================
    ADMIN MAIN CONTROLLER
@@ -866,6 +869,183 @@ function previewInvoice(){
 /* ---- Helpers ---- */
 function statusLabel(s){return{pending:'⏳ Pending',confirmed:'✅ Confirmed',packed:'📦 Packed',shipped:'🚚 Shipped',delivered:'🎉 Delivered',cancelled:'❌ Cancelled'}[s]||s||'Pending';}
 function adminToast(msg,isError=false){const t=document.getElementById('admin-toast');t.textContent=msg;t.classList.toggle('error',isError);t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+/* ---- Analytics ---- */
+function initAnalytics() {
+  // Re-render when analytics page is opened
+  const origNavigate = window.navigate;
+  window.navigate = function(page) {
+    origNavigate(page);
+    if (page === 'analytics') {
+      setTimeout(() => AnalyticsModule.renderAll(_allOrders), 100);
+    }
+    if (page === 'loyalty') {
+      loadLoyaltyPage();
+    }
+    if (page === 'flashsale') {
+      loadFlashSalePage();
+    }
+  };
+}
+
+/* ---- Flash Sale ---- */
+function loadFlashSalePage() {
+  const s = _settings;
+  const sv = (id, v) => { const el = document.getElementById(id); if(el) el.value = v||''; };
+  const sc = (id, v) => { const el = document.getElementById(id); if(el) el.checked = !!v; };
+  sv('fs-title', s.flash_sale_title || '');
+  sv('fs-discount', s.flash_sale_discount || '');
+  sv('fs-coupon', s.flash_sale_coupon || '');
+  sc('fs-active', s.flash_sale_active || false);
+  if (s.flash_sale_end) {
+    try {
+      const d = s.flash_sale_end.toDate ? s.flash_sale_end.toDate() : new Date(s.flash_sale_end);
+      sv('fs-end-date', d.toISOString().slice(0,16));
+    } catch(e) {}
+  }
+  updateFlashPreview();
+}
+
+function updateFlashPreview() {
+  const title    = document.getElementById('fs-title')?.value || '⚡ Flash Sale!';
+  const discount = document.getElementById('fs-discount')?.value || '';
+  const coupon   = document.getElementById('fs-coupon')?.value || '';
+  const tp = document.getElementById('fs-preview-title');    if(tp) tp.textContent = title;
+  const dp = document.getElementById('fs-preview-discount'); if(dp) dp.textContent = discount;
+  const cp = document.getElementById('fs-preview-coupon');
+  if(cp) { cp.textContent = coupon ? `Code: ${coupon.toUpperCase()}` : ''; cp.style.display = coupon ? 'inline-block' : 'none'; }
+}
+document.addEventListener('input', e => {
+  if (['fs-title','fs-discount','fs-coupon'].includes(e.target.id)) updateFlashPreview();
+});
+
+async function saveFlashSale() {
+  const endInput = document.getElementById('fs-end-date')?.value;
+  try {
+    await fbSaveSettings({
+      flash_sale_title:    document.getElementById('fs-title')?.value?.trim() || '',
+      flash_sale_discount: document.getElementById('fs-discount')?.value?.trim() || '',
+      flash_sale_coupon:   document.getElementById('fs-coupon')?.value?.trim().toUpperCase() || '',
+      flash_sale_end:      endInput ? new Date(endInput) : null,
+      flash_sale_active:   document.getElementById('fs-active')?.checked || false,
+    });
+    adminToast('Flash sale saved! ⚡');
+    _settings = await fbGetSettings();
+  } catch(e) { adminToast('Failed to save', true); }
+}
+
+/* ---- Loyalty ---- */
+let _loyaltyUnsub = null;
+
+function loadLoyaltyPage() {
+  const s = _settings;
+  const sv = (id, v) => { const el = document.getElementById(id); if(el) el.value = v||''; };
+  const sc = (id, v) => { const el = document.getElementById(id); if(el) el.checked = !!v; };
+  sv('lp-rate',       s.loyalty_points_per_100 || 5);
+  sv('lp-value',      s.loyalty_points_value   || 0.5);
+  sv('lp-min-redeem', s.loyalty_min_redeem     || 100);
+  sc('lp-enabled',    s.loyalty_enabled        || false);
+  updateLoyaltyExample();
+
+  if (_loyaltyUnsub) _loyaltyUnsub();
+  _loyaltyUnsub = fbListenLoyaltyLeaderboard(customers => renderLoyaltyLeaderboard(customers));
+}
+
+function updateLoyaltyExample() {
+  const rate  = parseFloat(document.getElementById('lp-rate')?.value)  || 5;
+  const val   = parseFloat(document.getElementById('lp-value')?.value) || 0.5;
+  const earn  = document.getElementById('lp-example-earn');
+  const value = document.getElementById('lp-example-val');
+  if (earn)  earn.textContent  = `${rate * 5} pts`;  // ₹500 order
+  if (value) value.textContent = `₹${Math.round(100 * val)}`; // 100 pts
+}
+document.addEventListener('input', e => {
+  if (['lp-rate','lp-value'].includes(e.target.id)) updateLoyaltyExample();
+});
+
+function renderLoyaltyLeaderboard(customers) {
+  const container = document.getElementById('loyalty-leaderboard');
+  if (!container) return;
+  if (!customers.length) {
+    container.innerHTML = `<div style="text-align:center;padding:2rem;color:#9CA3AF;">No loyalty customers yet. Points are earned on orders automatically.</div>`;
+    return;
+  }
+  const max = customers[0]?.points || 1;
+  container.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="background:#F9FAFB;">
+        <th style="padding:.6rem 1rem;text-align:left;font-size:.72rem;color:#6B7280;text-transform:uppercase;">#</th>
+        <th style="padding:.6rem 1rem;text-align:left;font-size:.72rem;color:#6B7280;text-transform:uppercase;">Customer</th>
+        <th style="padding:.6rem 1rem;text-align:left;font-size:.72rem;color:#6B7280;text-transform:uppercase;">Points</th>
+        <th style="padding:.6rem 1rem;text-align:right;font-size:.72rem;color:#6B7280;text-transform:uppercase;">Worth</th>
+      </tr></thead>
+      <tbody>
+        ${customers.map((c, i) => {
+          const val = parseFloat(_settings.loyalty_points_value || 0.5);
+          const worth = Math.floor((c.points || 0) * val);
+          return `<tr style="border-bottom:1px solid #F3F4F6;">
+            <td style="padding:.6rem 1rem;font-size:.82rem;color:#9CA3AF;">${i+1}</td>
+            <td style="padding:.6rem 1rem;">
+              <strong style="font-size:.85rem;">${c.name || c.id}</strong>
+              <div style="font-size:.72rem;color:#9CA3AF;">${c.id}</div>
+            </td>
+            <td style="padding:.6rem 1rem;">
+              <div style="display:flex;align-items:center;gap:.6rem;">
+                <strong style="color:#D4A017;">${(c.points||0).toLocaleString('en-IN')} 🌟</strong>
+                <div style="flex:1;height:4px;background:#F3F4F6;border-radius:2px;min-width:60px;">
+                  <div style="height:4px;background:#D4A017;border-radius:2px;width:${Math.round((c.points||0)/max*100)}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td style="padding:.6rem 1rem;text-align:right;font-size:.82rem;color:var(--green);">₹${worth}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function saveLoyaltySettings() {
+  try {
+    await fbSaveSettings({
+      loyalty_points_per_100: parseFloat(document.getElementById('lp-rate')?.value)      || 5,
+      loyalty_points_value:   parseFloat(document.getElementById('lp-value')?.value)     || 0.5,
+      loyalty_min_redeem:     parseInt(document.getElementById('lp-min-redeem')?.value)  || 100,
+      loyalty_enabled:        document.getElementById('lp-enabled')?.checked             || false,
+    });
+    _settings = await fbGetSettings();
+    LoyaltyModule.init(_settings);
+    adminToast('Loyalty settings saved! 🌟');
+  } catch(e) { adminToast('Failed to save', true); }
+}
+
+async function adjustLoyaltyPoints() {
+  const phone  = document.getElementById('loyalty-adj-phone')?.value?.trim();
+  const pts    = parseInt(document.getElementById('loyalty-adj-pts')?.value)    || 0;
+  const reason = document.getElementById('loyalty-adj-reason')?.value?.trim()   || 'Manual adjustment';
+  if (!phone || !pts) { adminToast('Phone and points required', true); return; }
+  try {
+    await fbAdjustLoyaltyPoints(phone, pts, reason);
+    adminToast(`${pts > 0 ? '+' : ''}${pts} points for ${phone}`);
+    document.getElementById('loyalty-adj-phone').value = '';
+    document.getElementById('loyalty-adj-pts').value   = '';
+    document.getElementById('loyalty-adj-reason').value= '';
+  } catch(e) { adminToast('Failed to adjust points', true); }
+}
+
+/* ---- Wire boot with analytics ---- */
+const _origBoot = window.boot;
+window.boot = async function() {
+  await _origBoot();
+  initAnalytics();
+  LoyaltyModule.init(_settings);
+};
+
+/* ---- Page title map update ---- */
+Object.assign(PAGE_TITLES, {
+  analytics: 'Analytics',
+  flashsale: 'Flash Sale',
+  loyalty:   'Loyalty Points',
+});
 
 // Close modals on overlay click
 ['order-modal','product-modal','coupon-modal','complaint-modal'].forEach(id=>{
