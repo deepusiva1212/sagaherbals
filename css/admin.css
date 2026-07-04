@@ -367,3 +367,35 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   .stats-grid { grid-template-columns: 1fr; }
   .table-wrap { overflow-x: auto; }
 }
+
+/* ============================================================
+   ANALYTICS + NEW ADMIN STYLES — Session 1
+   ============================================================ */
+.analytics-stats { display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.75rem;margin-bottom:1.5rem; }
+.analytics-stat  { background:white;border-radius:var(--radius);padding:1rem 1.25rem;box-shadow:var(--shadow); }
+.analytics-stat-label { font-size:.7rem;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem; }
+.analytics-stat-value { font-size:1.35rem;font-weight:700;color:var(--green-dark);line-height:1; }
+
+.charts-grid   { display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem; }
+.charts-grid-3 { display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem; }
+.chart-card    { background:white;border-radius:var(--radius);padding:1.25rem;box-shadow:var(--shadow); }
+.chart-card h3 { font-size:.85rem;font-weight:700;color:var(--green-dark);margin-bottom:.875rem; }
+.chart-wrap    { position:relative;height:200px; }
+
+/* Flash sale preview */
+.flash-sale-preview { background:linear-gradient(135deg,#1B4332,#2D6A4F);border-radius:10px;padding:1rem 1.25rem;color:white;font-size:.88rem;margin-top:.75rem; }
+
+/* Loyalty leaderboard */
+.loyalty-customer-row { display:flex;align-items:center;gap:.75rem;padding:.55rem 0;border-bottom:1px solid #F3F4F6; }
+.loyalty-pts-bar  { flex:1;height:4px;background:#F3F4F6;border-radius:2px; }
+.loyalty-pts-fill { height:4px;background:var(--gold);border-radius:2px; }
+
+@media(max-width:900px){
+  .charts-grid   { grid-template-columns:1fr; }
+  .charts-grid-3 { grid-template-columns:1fr 1fr; }
+  .analytics-stats { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:600px){
+  .charts-grid-3 { grid-template-columns:1fr; }
+  .analytics-stats { grid-template-columns:1fr 1fr; }
+}
