@@ -305,7 +305,7 @@ async function placeOrder() {
     showToast('Please fill all required fields', true); return;
   }
 
-  const summary   = CartModule.getSummary(payment);
+  const summary    = CartModule.getSummary(payment);
   const totalFinal = PaymentModule.calculateTotal({ subtotal:summary.sub, discount:summary.discount, shippingCharge:summary.shipping, paymentMethod:payment, settings:siteSettings });
 
   const btn = document.getElementById('place-order-btn');
@@ -321,6 +321,7 @@ async function placeOrder() {
     couponDiscount: summary.discount,
     items: CartModule.getItems().map(c=>({id:String(c.id),name:c.nameEN,nameTM:c.nameTM||'',emoji:c.emoji||'🌿',price:c.price,qty:c.qty,subtotal:c.price*c.qty})),
     subtotal:summary.sub, discount:summary.discount, shippingCharge:summary.shipping, total:totalFinal,
+    paymentStatus: payment === 'COD' ? 'pending_cod' : 'pending_payment',
   };
 
   let orderId = null;
@@ -331,18 +332,24 @@ async function placeOrder() {
     await NotificationsModule.sendOrderConfirmationEmail({ ...orderData, id: orderId }, siteSettings);
   } catch(e) { console.warn('Order save error:', e); }
 
-  // WhatsApp message
-  const msg = NotificationsModule.buildOrderMessage({ ...orderData, id: orderId || 'N/A' }, siteSettings);
-  window.open(`https://wa.me/${getWA()}?text=${encodeURIComponent(msg)}`, '_blank');
-
-  CartModule.clear();
-  closeCheckout();
   btn.textContent = t('placeOrder'); btn.disabled = false;
+  CartModule.clear();
 
-  if (orderId) {
-    showOrderConfirmation(orderId, invoiceNumber, totalFinal);
+  /* ---- Route by payment method ---- */
+  if (payment === 'Razorpay') {
+    // Real Razorpay payment gateway
+    await handleRazorpay(orderData, orderId, invoiceNumber, totalFinal);
+  } else if (payment === 'UPI' || payment === 'Bank') {
+    // Show payment instructions page — customer pays then confirms on WhatsApp
+    closeCheckout();
+    showPaymentInstructionsModal(orderData, orderId, invoiceNumber, totalFinal);
   } else {
-    showToast('Order placed via WhatsApp! 🎉');
+    // COD or fallback — send WhatsApp order
+    closeCheckout();
+    const msg = NotificationsModule.buildOrderMessage({ ...orderData, id: orderId || 'N/A' }, siteSettings);
+    window.open(`https://wa.me/${getWA()}?text=${encodeURIComponent(msg)}`, '_blank');
+    if (orderId) showOrderConfirmation(orderId, invoiceNumber, totalFinal);
+    else showToast('Order placed! 🎉');
   }
 }
 
@@ -559,3 +566,182 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('inp-phone')?.addEventListener('blur', checkLoyaltyAtCheckout);
   }, 1000);
 });
+
+/* ============================================================
+   RAZORPAY REAL PAYMENT HANDLER
+   ============================================================ */
+async function handleRazorpay(orderData, orderId, invoiceNumber, totalFinal) {
+  const rzpKey = siteSettings.razorpay_key || '';
+  if (!rzpKey) {
+    showToast('Razorpay not configured. Contact admin.', true);
+    return;
+  }
+
+  // Load Razorpay SDK dynamically
+  if (!window.Razorpay) {
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload  = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  const surcharge = siteSettings.razorpay_card_surcharge || 2;
+  const amountWithSurcharge = Math.round(totalFinal * (1 + surcharge / 100));
+  const amountPaise = amountWithSurcharge * 100; // Razorpay uses paise
+
+  const options = {
+    key:         rzpKey,
+    amount:      amountPaise,
+    currency:    'INR',
+    name:        siteSettings.site_name || 'Saga Herbals',
+    description: `Order ${invoiceNumber}`,
+    image:       '/assets/logo.png',
+    prefill: {
+      name:    orderData.customerName,
+      contact: orderData.customerPhone,
+      email:   orderData.customerEmail || '',
+    },
+    notes: {
+      order_id:    orderId || '',
+      invoice:     invoiceNumber,
+      address:     orderData.deliveryAddress,
+    },
+    theme: { color: '#2D6A4F' },
+    handler: async function(response) {
+      // Payment successful
+      try {
+        if (orderId) {
+          await fbUpdateOrderStatus(orderId, 'confirmed',
+            `Razorpay payment successful. Payment ID: ${response.razorpay_payment_id}`);
+          await db.collection('orders').doc(orderId).update({
+            razorpay_payment_id: response.razorpay_payment_id,
+            paymentStatus: 'paid',
+          });
+        }
+      } catch(e) { console.warn('Status update failed:', e); }
+
+      // Send WhatsApp confirmation
+      const msg = `✅ *Payment Confirmed — Saga Herbals*\n🔖 Order: ${invoiceNumber}\n💳 Razorpay ID: ${response.razorpay_payment_id}\n💰 Amount: ₹${amountWithSurcharge}\n\nThank you ${orderData.customerName}! We are processing your order.\n\n📦 Track: ${window.location.origin}/track.html?id=${orderId}`;
+      window.open(`https://wa.me/${getWA()}?text=${encodeURIComponent(msg)}`, '_blank');
+
+      closeCheckout();
+      if (orderId) showOrderConfirmation(orderId, invoiceNumber, totalFinal);
+    },
+    modal: {
+      ondismiss: function() {
+        showToast('Payment cancelled. Your order is saved — you can pay later.', true);
+        closeCheckout();
+        if (orderId) showOrderConfirmation(orderId, invoiceNumber, totalFinal);
+      }
+    }
+  };
+
+  try {
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  } catch(e) {
+    showToast('Could not open payment. Try WhatsApp order.', true);
+    closeCheckout();
+  }
+}
+
+/* ============================================================
+   UPI / BANK TRANSFER — PAYMENT INSTRUCTIONS MODAL
+   Shows payment details and asks customer to confirm on WhatsApp
+   ============================================================ */
+function showPaymentInstructionsModal(orderData, orderId, invoiceNumber, totalFinal) {
+  const modal = document.getElementById('payment-instructions-modal');
+  const body  = document.getElementById('payment-instructions-body');
+  const wa    = getWA();
+  const confirmMsg = `✅ I have made the payment for Order ${invoiceNumber} (₹${totalFinal}).\nName: ${orderData.customerName}\nPhone: ${orderData.customerPhone}\nPayment method: ${orderData.paymentMethod}`;
+
+  let detailsHtml = '';
+
+  if (orderData.paymentMethod === 'UPI') {
+    const upiId = siteSettings.upi_id || '';
+    const qrUrl = siteSettings.upi_qr_url || '';
+    detailsHtml = `
+      <div style="text-align:center;">
+        ${qrUrl ? `<img src="${qrUrl}" alt="UPI QR" style="width:180px;height:180px;object-fit:contain;border-radius:12px;border:1px solid var(--color-border);margin:0 auto .75rem;display:block;"/>` : ''}
+        ${upiId ? `
+        <div style="background:var(--color-bg-alt);border:1.5px dashed var(--color-primary);border-radius:10px;padding:.75rem 1rem;margin:.75rem 0;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:.72rem;color:var(--color-text-light);margin-bottom:.2rem;">UPI ID</div>
+            <strong style="font-size:1rem;color:var(--color-primary-dark);">${upiId}</strong>
+          </div>
+          <button onclick="copyText('${upiId}')" class="btn btn-secondary btn-sm">📋 Copy</button>
+        </div>` : ''}
+        <div style="text-align:left;margin-top:1rem;">
+          <div style="font-size:.85rem;font-weight:600;color:var(--color-primary-dark);margin-bottom:.5rem;">How to pay:</div>
+          <div style="font-size:.85rem;color:var(--color-text-light);line-height:1.8;">
+            1. Open GPay / PhonePe / any UPI app<br/>
+            2. Send <strong style="color:var(--color-primary);">₹${totalFinal}</strong> to the UPI ID above<br/>
+            3. Take a screenshot of the payment confirmation<br/>
+            4. Click the WhatsApp button below to send us the screenshot
+          </div>
+        </div>
+      </div>`;
+  } else if (orderData.paymentMethod === 'Bank') {
+    detailsHtml = `
+      <div style="background:var(--color-bg-alt);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--color-primary-dark);margin-bottom:.75rem;">Bank Transfer Details</div>
+        ${[
+          ['Bank Name',       siteSettings.bank_name    || '—'],
+          ['Account Name',    siteSettings.bank_holder  || '—'],
+          ['Account Number',  siteSettings.bank_account || '—'],
+          ['IFSC Code',       siteSettings.bank_ifsc    || '—'],
+        ].map(([label, val]) => `
+          <div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--color-border);font-size:.85rem;">
+            <span style="color:var(--color-text-light);">${label}</span>
+            <strong style="color:var(--color-primary-dark);">${val}
+              ${val !== '—' ? `<button onclick="copyText('${val}')" style="background:none;border:none;cursor:pointer;font-size:.75rem;color:var(--color-primary);margin-left:.3rem;">📋</button>` : ''}
+            </strong>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:.85rem;color:var(--color-text-light);line-height:1.8;">
+        1. Transfer <strong style="color:var(--color-primary);">₹${totalFinal}</strong> using NEFT / IMPS / UPI<br/>
+        2. Take a screenshot of the transfer confirmation<br/>
+        3. Click the WhatsApp button below to send us the screenshot
+      </div>`;
+  }
+
+  body.innerHTML = `
+    <div style="text-align:center;margin-bottom:1.25rem;">
+      <div style="font-size:2.5rem;margin-bottom:.5rem;">🎉</div>
+      <h3 style="font-family:var(--font-display);font-size:1.2rem;color:var(--color-primary-dark);margin-bottom:.25rem;">Order Placed Successfully!</h3>
+      <div style="background:var(--color-bg-alt);border-radius:8px;padding:.6rem 1rem;display:inline-block;margin:.5rem 0;">
+        <span style="font-size:.78rem;color:var(--color-text-light);">Order ID: </span>
+        <strong style="font-family:monospace;color:var(--color-primary);">${invoiceNumber}</strong>
+      </div>
+      <div style="font-size:.88rem;color:var(--color-text-light);">Total: <strong style="color:var(--color-primary-dark);">₹${totalFinal}</strong></div>
+    </div>
+
+    <div style="background:rgba(212,160,23,.1);border-left:3px solid var(--color-accent);border-radius:0 8px 8px 0;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.85rem;color:var(--color-primary-dark);">
+      <strong>Now complete your payment:</strong> Make the payment and send the screenshot to WhatsApp for confirmation.
+    </div>
+
+    ${detailsHtml}
+
+    <div style="margin-top:1.25rem;padding:1rem;background:rgba(45,106,79,.07);border-radius:10px;font-size:.82rem;color:var(--color-primary-dark);">
+      ⏱ We confirm your payment within <strong>${siteSettings.payment_confirmation_hours || 1} working hour</strong>. Most orders confirmed within 1 hour!
+    </div>
+
+    <div style="margin-top:1.25rem;display:flex;flex-direction:column;gap:.75rem;">
+      <a href="https://wa.me/${wa}?text=${encodeURIComponent(confirmMsg)}" target="_blank"
+         class="btn btn-whatsapp" style="justify-content:center;padding:1rem;font-size:1rem;">
+        💬 I've Paid — Send Screenshot on WhatsApp
+      </a>
+      <a href="track.html?id=${orderId || ''}" class="btn btn-secondary" style="justify-content:center;">
+        📦 Track My Order
+      </a>
+    </div>`;
+
+  modal.classList.add('open');
+}
+
+function closePaymentInstructions() {
+  document.getElementById('payment-instructions-modal')?.classList.remove('open');
+}

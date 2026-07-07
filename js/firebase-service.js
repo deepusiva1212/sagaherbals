@@ -64,8 +64,17 @@ async function fbLogActivity(action, details = {}) {
 
 function fbListenActivityLog(cb) {
   return db.collection(COL.activityLog)
-    .orderBy('timestamp', 'desc').limit(100)
-    .onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    .onSnapshot(snap => {
+      const logs = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(0);
+          const tb = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(0);
+          return tb - ta;
+        })
+        .slice(0, 100);
+      cb(logs);
+    });
 }
 
 /* ============================================================
@@ -134,16 +143,27 @@ async function fbDeleteOrder(id) {
 }
 
 function fbListenOrders(cb) {
-  return db.collection(COL.orders).orderBy('createdAt', 'desc')
-    .onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+  return db.collection(COL.orders)
+    .onSnapshot(snap => {
+      const orders = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return tb - ta;
+        });
+      cb(orders);
+    });
 }
 
 /* ============================================================
    PRODUCTS
    ============================================================ */
 async function fbGetProducts() {
-  const snap = await db.collection(COL.products).orderBy('sortOrder', 'asc').get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await db.collection(COL.products).get();
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 }
 
 async function fbAddProduct(data) {
@@ -270,12 +290,32 @@ async function fbIncrementCouponUse(id) {
    REVIEWS
    ============================================================ */
 function fbListenReviews(cb) {
-  return db.collection(COL.reviews).orderBy('createdAt','desc').onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+  return db.collection(COL.reviews)
+    .onSnapshot(snap => {
+      const reviews = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return tb - ta;
+        });
+      cb(reviews);
+    });
 }
 
 function fbListenApprovedReviews(cb) {
-  return db.collection(COL.reviews).where('approved','==',true).orderBy('createdAt','desc')
-    .onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+  return db.collection(COL.reviews)
+    .onSnapshot(snap => {
+      const reviews = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(r => r.approved === true)
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return tb - ta;
+        });
+      cb(reviews);
+    });
 }
 
 async function fbSubmitReview(data) {
@@ -294,7 +334,17 @@ async function fbSubmitComplaint(data) {
 }
 
 function fbListenComplaints(cb) {
-  return db.collection(COL.complaints).orderBy('createdAt','desc').onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+  return db.collection(COL.complaints)
+    .onSnapshot(snap => {
+      const items = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return tb - ta;
+        });
+      cb(items);
+    });
 }
 
 async function fbUpdateComplaintStatus(id, status, reply = '') {
@@ -322,8 +372,14 @@ async function fbGetNextInvoiceNumber() {
    LOYALTY POINTS — Firebase operations
    ============================================================ */
 function fbListenLoyaltyLeaderboard(cb) {
-  return db.collection('loyaltyPoints').orderBy('points','desc').limit(50)
-    .onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+  return db.collection('loyaltyPoints')
+    .onSnapshot(snap => {
+      const items = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.points || 0) - (a.points || 0))
+        .slice(0, 50);
+      cb(items);
+    });
 }
 
 async function fbAdjustLoyaltyPoints(phone, delta, reason) {
