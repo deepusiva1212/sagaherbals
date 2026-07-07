@@ -4,6 +4,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel — Saga Herbals</title>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="SH Admin"/>
+  <meta name="theme-color" content="#1B4332"/>
+  <link rel="manifest" href="admin-manifest.json"/>
   <link rel="stylesheet" href="css/admin.css"/>
   <style>
     .selected-row { background: rgba(45,106,79,.04); }
@@ -72,7 +78,12 @@
   <!-- MAIN -->
   <div class="main-content">
     <div class="topbar">
-      <div class="topbar-left"><div class="topbar-title" id="topbar-title">Dashboard</div></div>
+      <div class="topbar-left">
+        <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleAdminSidebar()">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+      </div>
       <div class="topbar-right">
         <div class="live-badge"><div class="live-dot"></div> Live</div>
         <a href="index.html" target="_blank" class="btn btn-secondary btn-sm">🌐 View Site</a>
@@ -419,7 +430,8 @@
         <div class="form-group full">
           <label class="form-label">Product Image URL</label>
           <input class="form-control" id="p-image-url" placeholder="https://link-to-product-image.jpg"/>
-          <div class="form-hint">Upload to Google Drive / Cloudinary / any image host and paste the direct image link here</div>
+          <div id="p-image-upload-wrap"></div>
+          <div class="form-hint">Paste image URL above OR upload directly below (requires Cloudinary setup in Site Settings)</div>
         </div>
         <div class="form-group full">
           <label class="form-label">YouTube Video URL (optional)</label>
@@ -472,6 +484,18 @@
 <script src="js/admin/users.js"></script>
 <script src="js/admin/integrations.js"></script>
 <script src="js/admin/analytics.js"></script>
+<script src="js/admin/imageupload.js"></script>
+
+<!-- Sidebar mobile overlay -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleAdminSidebar()"></div>
+
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner">
+  <span>📱 Install app for quick access</span>
+  <button onclick="installPWA()">Install</button>
+  <button class="dismiss" onclick="document.getElementById('pwa-install-banner').classList.remove('show')">✕</button>
+</div>
+
 <script>
 /* ============================================================
    ADMIN MAIN CONTROLLER
@@ -1051,6 +1075,161 @@ Object.assign(PAGE_TITLES, {
 ['order-modal','product-modal','coupon-modal','complaint-modal'].forEach(id=>{
   document.getElementById(id)?.addEventListener('click',e=>{if(e.target.id===id)e.target.classList.remove('open');});
 });
+
+/* ============================================================
+   MOBILE SIDEBAR TOGGLE
+   ============================================================ */
+function toggleAdminSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const isOpen  = sidebar.classList.contains('mobile-open');
+  sidebar.classList.toggle('mobile-open', !isOpen);
+  overlay.classList.toggle('open', !isOpen);
+}
+
+// Close sidebar when nav item clicked on mobile
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      document.getElementById('sidebar').classList.remove('mobile-open');
+      document.getElementById('sidebar-overlay').classList.remove('open');
+    }
+  });
+});
+
+/* ============================================================
+   PWA INSTALL
+   ============================================================ */
+let _deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  setTimeout(() => document.getElementById('pwa-install-banner')?.classList.add('show'), 3000);
+});
+
+function installPWA() {
+  const banner = document.getElementById('pwa-install-banner');
+  if (_deferredInstallPrompt) {
+    _deferredInstallPrompt.prompt();
+    _deferredInstallPrompt.userChoice.then(result => {
+      if (result.outcome === 'accepted') adminToast('App installed! 📱');
+      _deferredInstallPrompt = null;
+      banner?.classList.remove('show');
+    });
+  } else {
+    adminToast('On iPhone: tap Share → "Add to Home Screen"');
+    banner?.classList.remove('show');
+  }
+}
+
+window.addEventListener('appinstalled', () => {
+  adminToast('Saga Herbals Admin installed! 🎉');
+  document.getElementById('pwa-install-banner')?.classList.remove('show');
+});
+
+/* ============================================================
+   CLOUDINARY IMAGE UPLOAD — wired into product modal
+   ============================================================ */
+function openAddProduct() {
+  document.getElementById('product-modal-title').textContent = 'Add New Product';
+  document.getElementById('edit-product-id').value = '';
+  ['p-name-en','p-name-tm','p-desc-en','p-desc-tm','p-benefits','p-how-to-use',
+   'p-price','p-orig-price','p-badge','p-tags','p-stock',
+   'p-image-url','p-video-url','p-reel-url'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('p-category').value = 'bath';
+  document.getElementById('p-emoji').value    = '🌿';
+  // Render image upload button
+  ImageUploadModule.renderUploadButton('p-image-upload-wrap', 'p-image-file', 'p-image-preview', _settings);
+  document.getElementById('product-modal').classList.add('open');
+}
+
+function openEditProduct(id) {
+  const p = _allProducts.find(x => x.id === id); if (!p) return;
+  document.getElementById('product-modal-title').textContent = 'Edit Product';
+  document.getElementById('edit-product-id').value = id;
+  const sv = (elId, v) => { const el = document.getElementById(elId); if(el) el.value = v||''; };
+  sv('p-name-en',p.nameEN);    sv('p-name-tm',p.nameTM);
+  sv('p-desc-en',p.descEN);    sv('p-desc-tm',p.descTM);
+  sv('p-benefits',p.benefits); sv('p-how-to-use',p.howToUse);
+  sv('p-price',p.price);       sv('p-orig-price',p.originalPrice);
+  sv('p-emoji',p.emoji||'🌿'); sv('p-badge',p.badge);
+  sv('p-tags',(p.tags||[]).join(', ')); sv('p-stock',p.stock);
+  sv('p-image-url',p.imageUrl); sv('p-video-url',p.videoUrl); sv('p-reel-url',p.reelUrl);
+  document.getElementById('p-category').value = p.category || 'bath';
+  // Render image upload button with existing preview
+  ImageUploadModule.renderUploadButton('p-image-upload-wrap','p-image-file','p-image-preview', _settings);
+  if (p.imageUrl) {
+    const preview = document.getElementById('p-image-preview');
+    const img     = document.getElementById('p-image-preview-img');
+    if (preview && img) { img.src = p.imageUrl; preview.style.display='block'; preview.style.position='relative'; }
+  }
+  document.getElementById('product-modal').classList.add('open');
+}
+
+/* ============================================================
+   CLOUDINARY SETTINGS — added to Site Config page
+   ============================================================ */
+function addCloudinarySettingsToPage() {
+  const siteConfigCard = document.querySelector('#page-siteconfig .settings-grid');
+  if (!siteConfigCard) return;
+  const existing = document.getElementById('cloudinary-settings-card');
+  if (existing) return; // already added
+
+  const card = document.createElement('div');
+  card.id = 'cloudinary-settings-card';
+  card.className = 'settings-card full';
+  card.innerHTML = `
+    <h3>🖼️ Image Storage (Cloudinary)</h3>
+    <p style="font-size:.82rem;color:#6B7280;margin-bottom:1rem;">
+      Free image hosting for product photos. Sign up free at
+      <a href="https://cloudinary.com" target="_blank" style="color:var(--green);">cloudinary.com</a>
+      (25GB free storage) → Settings → Upload Presets → Add unsigned preset.
+    </p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Cloud Name</label>
+        <input class="form-control" type="text" id="cl-cloud-name" placeholder="your-cloud-name"/>
+        <div class="form-hint">Found in your Cloudinary Dashboard</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Upload Preset Name</label>
+        <input class="form-control" type="text" id="cl-preset" placeholder="saga_herbals_unsigned"/>
+        <div class="form-hint">Must be set to "Unsigned" mode</div>
+      </div>
+    </div>
+    <div style="background:#EFF6FF;border-radius:8px;padding:.875rem;font-size:.82rem;color:#1E40AF;margin-bottom:1rem;">
+      💡 After setup, you can upload product images directly from the Products page — no need to use external links.
+    </div>
+    <button class="btn btn-primary" onclick="saveCloudinarySettings()">Save Image Settings</button>`;
+  siteConfigCard.appendChild(card);
+
+  // Load existing values
+  const s = _settings;
+  const sv = (id, v) => { const el = document.getElementById(id); if(el) el.value = v||''; };
+  sv('cl-cloud-name', s.cloudinary_cloud_name   || '');
+  sv('cl-preset',     s.cloudinary_upload_preset || '');
+}
+
+async function saveCloudinarySettings() {
+  try {
+    await fbSaveSettings({
+      cloudinary_cloud_name:    document.getElementById('cl-cloud-name')?.value?.trim() || '',
+      cloudinary_upload_preset: document.getElementById('cl-preset')?.value?.trim()     || '',
+    });
+    _settings = await fbGetSettings();
+    adminToast('Image settings saved! 🖼️');
+  } catch(e) { adminToast('Failed to save', true); }
+}
+
+// Add Cloudinary card when site config page is opened
+const _origNavigate = window.navigate;
+window.navigate = function(page) {
+  if (_origNavigate) _origNavigate(page);
+  if (page === 'siteconfig') setTimeout(addCloudinarySettingsToPage, 100);
+};
 </script>
 </body>
 </html>
